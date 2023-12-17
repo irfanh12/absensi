@@ -30,8 +30,8 @@ return new class extends Migration
 
             $table->foreign('perusahaan_id')
                 ->references('id')
+                ->cascadeOnUpdate()
                 ->noActionOnUpdate()
-                ->cascadeOnDelete()
                 ->on('perusahaan');
         });
     }
@@ -42,6 +42,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('karyawan');
-        Schema::dropIfExists('karyawan_type');
+        Schema::dropIfExists('user_types');
     }
 };
