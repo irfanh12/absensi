@@ -3,16 +3,21 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
+
     /**
-     * Handle login
+     * Login function.
      *
-     * @return \Illuminate\Http\Response
+     * @param Request $request The request object.
+     * @throws None
+     * @return JsonResponse The JSON response.
      */
     public function login(Request $request)
     {
@@ -30,9 +35,8 @@ class AuthController extends Controller
             return response()->json($responseOutput, 403);
         }
 
-        //continue
-        if (Auth::attempt(['email' => request('email'), 'password' => request('password')])) {
-            $user = Auth::user();
+        if (Auth::attempt(request(['email','password']))) {
+            $user = $request->user();
 
             //user details
             $user_details = [];
@@ -44,8 +48,13 @@ class AuthController extends Controller
             $responseOutput['message'] = 'Logged in.';
 
             $user->tokens()->delete();
+
+            $user_type = $user->karyawan->user_type;
+            $user_type = Str::snake($user_type->type);
+
+            $token = $user->createToken('PresensiToken', $this->enumType($user_type))->plainTextToken;
             $responseOutput['data'] = [
-                'token' => $user->createToken('PresensiToken', ['karyawan:outsource'])->plainTextToken,
+                'token' => $token,
                 'user_details' => $user_details,
             ];
 

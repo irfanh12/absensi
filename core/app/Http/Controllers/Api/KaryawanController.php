@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use DB;
 use Exception;
 
 use App\Models\User;
@@ -11,11 +10,19 @@ use App\Http\Controllers\Controller;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class KaryawanController extends Controller
 {
+    /**
+     * Store the data from the request.
+     *
+     * @param Request $request The request object containing the data to be stored.
+     * @throws Exception If an error occurs during the database transaction.
+     * @return \Illuminate\Http\JsonResponse The JSON response containing the stored data.
+     */
     public function store(Request $request) {
         $responseOutput = $this->responseOutput;
 
@@ -51,18 +58,21 @@ class KaryawanController extends Controller
                 'created_at'    => now()->timestamp,
             ]);
 
-            if(Auth::attempt(['email' => $input['email'], 'password' => $password])) {
-                $user = Auth::user();
-                $token = $user->createToken('PresensiToken', ['karyawan:outsource'])->plainTextToken;
-            }
-
             DB::commit();
+
+            $user = $request->user();
+            $user->tokens()->delete();
+
+            $user_type = $user->karyawan->user_type;
+            $user_type = Str::snake($user_type->type);
+
+            $token = $user->createToken('PresensiToken', $this->enumType($user_type))->plainTextToken;
 
             $responseOutput['success'] = true;
             $responseOutput['message'] = 'Success';
             $responseOutput['data'] = [
-                'user' => $user,
                 'token' => $token,
+                'user' => $user,
             ];
 
             return response()->json($responseOutput);
