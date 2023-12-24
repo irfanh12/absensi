@@ -41,6 +41,8 @@ class AuthController extends Controller
             //user details
             $user_details = [];
             $user_details['email'] = $user->email;
+            $user_details['karyawan'] = $user->karyawan;
+            $user_details['karyawan']['initial'] = $user->karyawan->initialName;
             $user_details['id'] = $user->id;
 
             //output
@@ -62,5 +64,18 @@ class AuthController extends Controller
         } else {
             return response()->json($responseOutput, 401);
         }
+    }
+
+    public function profile(Request $request)
+    {
+        $responseOutput = $this->responseOutput;
+
+        $user = Auth::user();
+        if($user) {
+            $responseOutput['success'] = true;
+            $responseOutput['message'] = 'Success';
+        }
+
+        return response()->json($responseOutput);
     }
 }

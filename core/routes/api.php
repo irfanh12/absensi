@@ -30,6 +30,7 @@ Route::prefix('v1')->group(function () {
 
     Route::controller(AuthController::class)->group(function () {
         Route::prefix('auth')->group(function () {
+            Route::get('profile', 'profile')->middleware(['auth:sanctum']);
             Route::post('login', 'login');
             Route::post('logout', 'logout');
         });
