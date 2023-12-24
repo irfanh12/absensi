@@ -39,17 +39,17 @@ store.mainContent({ mode: "narrow" });
           :nodes="[
             {
               name: 'Dashboard',
-              to: 'backend-dashboard',
+              to: 'dashboard',
               icon: 'si si-speedometer',
             },
             {
-              name: 'More',
+              name: 'Action',
               heading: true,
             },
             {
-              name: 'Landing',
-              to: 'landing',
-              icon: 'si si-rocket',
+              name: 'Log Out',
+              to: 'logout',
+              icon: 'si si-logout',
             },
           ]"
         />
@@ -71,13 +71,13 @@ store.mainContent({ mode: "narrow" });
       <!-- END Toggle Sidebar -->
 
       <!-- Toggle Mini Sidebar -->
-      <button
+      <!-- <button
         type="button"
         class="btn btn-sm btn-alt-secondary me-2 d-none d-lg-inline-block"
         @click="store.sidebarMini({ mode: 'toggle' })"
       >
         <i class="fa fa-fw fa-ellipsis-v"></i>
-      </button>
+      </button> -->
       <!-- END Toggle Mini Sidebar -->
     </template>
     <!-- END Header Content Left -->
@@ -88,10 +88,8 @@ store.mainContent({ mode: "narrow" });
       <!-- Toggle Side Overlay -->
       <button
         type="button"
-        class="btn btn-sm btn-alt-secondary ms-2"
-        @click="store.sideOverlay({ mode: 'toggle' })"
-      >
-        <i class="fa fa-fw fa-list-ul fa-flip-horizontal"></i>
+        class="btn btn-sm btn-alt-secondary p-2 px-3">
+        {{ store.app.fullname }}
       </button>
       <!-- END Toggle Side Overlay -->
     </template>
@@ -100,7 +98,7 @@ store.mainContent({ mode: "narrow" });
     <!-- Footer Content Left -->
     <!-- Using the available v-slot, we can override the default Footer content from layouts/partials/Footer.vue -->
     <template #footer-content-left>
-      <strong>My App</strong>
+      <strong>{{ store.app.name }}</strong>
       &copy; {{ store.app.copyright }}
     </template>
     <!-- END Footer Content Left -->

@@ -3,8 +3,9 @@ import { createPinia } from "pinia";
 import App from "./App.vue";
 
 // You can use the following starter router instead of the default one as a clean starting point
+import router from "./router/starter";
 // import router from "./router/starter";
-import router from "./router";
+// import router from "./router";
 
 // Template components
 import BaseBlock from "@/components/BaseBlock.vue";
@@ -17,6 +18,17 @@ import clickRipple from "@/directives/clickRipple";
 // Bootstrap framework
 import * as bootstrap from "bootstrap";
 window.bootstrap = bootstrap;
+
+import moment from "moment";
+window.moment = moment;
+
+import axios from "axios";
+import { baseUrl } from "@/stores/utils.js";
+window.axios = axios;
+
+window.axios.defaults.baseURL = `${baseUrl}/`;
+window.axios.defaults.headers.common["Accept"] = "application/json";
+window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 // Craft new application
 const app = createApp(App);
