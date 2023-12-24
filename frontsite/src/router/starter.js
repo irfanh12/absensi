@@ -1,43 +1,16 @@
 import { createRouter, createWebHashHistory } from "vue-router";
-
+import checkSession from "@/stores/utils";
 import NProgress from "nprogress/nprogress.js";
 
-// Main layouts
-import LayoutBackend from "@/layouts/variations/BackendStarter.vue";
-import LayoutSimple from "@/layouts/variations/Simple.vue";
-
-// Frontend: Landing
-const Landing = () => import("@/views/starter/LandingView.vue");
-
-// Backend: Dashboard
-const Dashboard = () => import("@/views/starter/DashboardView.vue");
+// AUTH
+import auth from "@/router/menus/auth";
+import dashboard from "@/router/menus/dashboard";
 
 // Set all routes
 const routes = [
-  {
-    path: "/",
-    component: LayoutSimple,
-    children: [
-      {
-        path: "",
-        name: "landing",
-        component: Landing,
-      },
-    ],
-  },
-  {
-    path: "/backend",
-    redirect: "/backend/dashboard",
-    component: LayoutBackend,
-    children: [
-      {
-        path: "dashboard",
-        name: "backend-dashboard",
-        component: Dashboard,
-      },
-    ],
-  },
-];
+  ...auth,
+  ...dashboard,
+]
 
 // Create Router
 const router = createRouter({
@@ -52,11 +25,27 @@ const router = createRouter({
 
 // NProgress
 /*eslint-disable no-unused-vars*/
-NProgress.configure({ showSpinner: false });
-
-router.beforeResolve((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   NProgress.start();
-  next();
+  let token = localStorage.getItem("token");
+
+  if (to.name === from.name) {
+    next(false);
+    return;
+  }
+
+  if (token) {
+    const isValidSession = await checkSession(token);
+
+    if (isValidSession && to.name == 'login') next({ name: 'dashboard' });
+    else if (!isValidSession && to.name !== 'login') next({ name: 'login' });
+    else next();
+  } else {
+    if (to.name !== 'login') next({ name: 'login' });
+    else {
+      next();
+    }
+  }
 });
 
 router.afterEach((to, from) => {
