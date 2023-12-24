@@ -15,6 +15,7 @@ export function getCookieByName(name) {
 }
 
 export default async function checkSession(token) {
+  
   try {
     const response = await axios.get('api/v1/auth/profile', {
       headers: {
