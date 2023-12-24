@@ -6,9 +6,11 @@ export const useTemplateStore = defineStore({
   state: () => ({
     // App vital details
     app: {
-      name: "OneUI Vue Edition",
-      version: "2.6.0",
+      name: import.meta.env.VITE_APP_NAME,
+      version: "v0.0.1",
       copyright: new Date().getFullYear(),
+      fullname: localStorage.getItem("fullname"),
+      position: localStorage.getItem("position"),
     },
 
     // Default layout options
