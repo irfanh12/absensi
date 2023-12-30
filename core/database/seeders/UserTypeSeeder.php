@@ -13,7 +13,15 @@ class UserTypeSeeder extends Seeder
      */
     public function run(): void
     {
-        foreach([ 'Administrator', 'Klien', 'Manager', 'Human Resource', 'Supervisor', 'Karyawan', 'Karyawan Outsource' ] as $id => $type) {
+        foreach([
+            'Administrator',
+            'Klien',
+            // 'Manager',
+            'Human Resource',
+            // 'Supervisor',
+            'Karyawan',
+            'Karyawan Outsource'
+        ] as $id => $type) {
             DB::table('user_types')
                 ->insert([
                     'id' => $id+1,
