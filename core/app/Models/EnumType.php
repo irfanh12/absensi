@@ -17,6 +17,10 @@ class EnumType extends Model
     public const KARYAWAN = 'karyawan';
     public const KARYAWAN_OUTSOURCE = 'outsource';
 
+    // Approval
+    public const APPROVAL_KLIEN     = 1;
+    public const APPROVAL_HR        = 2;
+
     public static function getConstant(string $constant)
     {
         return constant("self::$constant") ?? null;
