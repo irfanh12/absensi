@@ -60,18 +60,17 @@ class KaryawanController extends Controller
 
             DB::commit();
 
-            $user = $request->user();
-            $user->tokens()->delete();
+            $user = User::find($uuid);
+            // $user->tokens()->delete();
 
-            $user_type = $user->karyawan->user_type;
-            $user_type = Str::snake($user_type->type);
+            // $user_type = $user->karyawan->user_type;
+            // $user_type = Str::snake($user_type->type);
 
-            $token = $user->createToken('PresensiToken', $this->enumType($user_type))->plainTextToken;
+            // $token = $user->createToken('PresensiToken', $this->enumType($user_type))->plainTextToken;
 
             $responseOutput['success'] = true;
             $responseOutput['message'] = 'Success';
             $responseOutput['data'] = [
-                'token' => $token,
                 'user' => $user,
             ];
 
