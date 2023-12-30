@@ -32,7 +32,7 @@ class AuthController extends Controller
 
         if ($validator->fails()) {
             // $responseOutput['message'] = $validator->messages()->first();
-            return response()->json($responseOutput, 403);
+            abort(403, $responseOutput['message']);
         }
 
         if (Auth::attempt(request(['email','password']))) {
@@ -62,7 +62,7 @@ class AuthController extends Controller
 
             return response()->json($responseOutput);
         } else {
-            return response()->json($responseOutput, 401);
+            abort(401, $responseOutput['message']);
         }
     }
 

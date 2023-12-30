@@ -8,9 +8,7 @@ export const useTemplateStore = defineStore({
     app: {
       name: import.meta.env.VITE_APP_NAME,
       version: "v0.0.1",
-      copyright: new Date().getFullYear(),
-      fullname: localStorage.getItem("fullname"),
-      position: localStorage.getItem("position"),
+      copyright: new Date().getFullYear()
     },
 
     // Default layout options

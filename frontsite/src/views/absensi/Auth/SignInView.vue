@@ -2,16 +2,18 @@
 import { reactive, computed } from "vue";
 import { useRouter } from "vue-router";
 import { useTemplateStore } from "@/stores/template";
+import { useAuth } from "@/stores/auth";
 
 // Vuelidate, for more info and examples you can check out https://github.com/vuelidate/vuelidate
 import useVuelidate from "@vuelidate/core";
 import { required, minLength } from "@vuelidate/validators";
 
-import { getCookieByName } from "@/stores/utils"
-
 // Main store and Router
 const store = useTemplateStore();
 const router = useRouter();
+
+// Auth store
+const auth = useAuth();
 
 // Input state variables
 const state = reactive({
@@ -62,6 +64,9 @@ async function onSubmit() {
 
     axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
+    // Put into store
+    auth.login(`${first_name} ${last_name}`, position);
+
     // Redirect to the dashboard
     router.push({ name: "dashboard" });
   } catch (err) {
@@ -82,7 +87,7 @@ async function onSubmit() {
       <div class="row justify-content-center push">
         <div class="col-md-8 col-lg-6 col-xl-4">
           <!-- Sign In Block -->
-          <BaseBlock title="Sign In" class="mb-0">
+          <BaseBlock class="mb-0">
             <div class="p-sm-3 px-lg-4 px-xxl-5 py-lg-5">
               <h1 class="h2 mb-1">{{ store.app.name }}</h1>
               <p class="fw-medium text-muted">Welcome, please login.</p>

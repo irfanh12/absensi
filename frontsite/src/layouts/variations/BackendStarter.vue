@@ -1,4 +1,5 @@
 <script setup>
+import { useAuth } from "@/stores/auth";
 import { useTemplateStore } from "@/stores/template";
 
 import BaseLayout from "@/layouts/BaseLayout.vue";
@@ -6,6 +7,9 @@ import BaseNavigation from "@/components/BaseNavigation.vue";
 
 // Main store
 const store = useTemplateStore();
+
+// Auth store
+const auth = useAuth();
 
 // Set default elements for this layout
 store.setLayout({
@@ -89,7 +93,7 @@ store.mainContent({ mode: "narrow" });
       <button
         type="button"
         class="btn btn-sm btn-alt-secondary p-2 px-3">
-        {{ store.app.fullname }}
+        {{ auth.fullname }}
       </button>
       <!-- END Toggle Side Overlay -->
     </template>

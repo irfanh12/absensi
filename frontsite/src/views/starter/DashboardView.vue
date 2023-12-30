@@ -3,10 +3,11 @@
 import { onMounted, reactive } from "vue";
 import { useRouter } from "vue-router";
 
-import { useTemplateStore } from "@/stores/template";
+import SimpleBar from "simplebar";
+import { useAuth } from "@/stores/auth";
 
-// Main store
-const store = useTemplateStore();
+// Auth store
+const auth = useAuth();
 
 // Now Date
 const nowDate = moment().format("ddd, DD MMM YYYY");
@@ -37,20 +38,21 @@ let maps = reactive({
 });
 
 onMounted(() => {
-  getCurrentPosition()
-    .then((pos) => {
-      // Handle the position data here
-      maps.lat = pos.coords.latitude;
-      maps.lng = pos.coords.longitude;
-      new google.maps.Map(document.getElementById("map"), {
-        center: { lat: maps.lat, lng: maps.lng }, // Example location (San Francisco)
-        zoom: 12, // Adjust the zoom level as needed
-      });
-    })
-    .catch((error) => {
-      // Handle any errors that occur
-      console.error(error);
-    });
+  new SimpleBar(document.getElementById("timesheet"));
+  // getCurrentPosition()
+  //   .then((pos) => {
+  //     // Handle the position data here
+  //     maps.lat = pos.coords.latitude;
+  //     maps.lng = pos.coords.longitude;
+  //     new google.maps.Map(document.getElementById("map"), {
+  //       center: { lat: maps.lat, lng: maps.lng }, // Example location (San Francisco)
+  //       zoom: 12, // Adjust the zoom level as needed
+  //     });
+  //   })
+  //   .catch((error) => {
+  //     // Handle any errors that occur
+  //     console.error(error);
+  //   });
 })
 
 
@@ -76,8 +78,8 @@ function getCurrentPosition() {
             alt="Avatar"
           />
         </div>
-        <h1 class="h2 text-white mb-0">{{ store.app.fullname }}</h1>
-        <span class="text-white-75">{{ store.app.position }}</span>
+        <h1 class="h2 text-white mb-0">{{ auth.fullname }}</h1>
+        <span class="text-white-75">{{ auth.position }}</span>
       </div>
     </BaseBackground>
     <!-- END Hero -->
@@ -125,128 +127,24 @@ function getCurrentPosition() {
       <div class="row">
         <div class="col-md-7 col-xl-8">
           <!-- Updates -->
-          <ul class="timeline timeline-alt py-0">
-            <li class="timeline-event">
-              <div class="timeline-event-icon bg-default">
-                <i class="fab fa-facebook-f"></i>
-              </div>
-              <BaseBlock title="Facebook" class="timeline-event-block">
-                <template #options>
-                  <div class="timeline-event-time block-options-item fs-sm">
-                    just now
-                  </div>
-                </template>
-
-                <p class="fw-semibold mb-2">+ 290 Page Likes</p>
-                <p>This is great, keep it up!</p>
-              </BaseBlock>
-            </li>
-            <li class="timeline-event">
-              <div class="timeline-event-icon bg-modern">
-                <i class="fa fa-briefcase"></i>
-              </div>
-              <BaseBlock title="Products" class="timeline-event-block">
-                <template #options>
-                  <div class="timeline-event-time block-options-item fs-sm">
-                    4 hrs ago
-                  </div>
-                </template>
-
-                <p class="fw-semibold mb-2">3 New Products were added!</p>
-                <div class="d-flex push">
-                  <a
-                    class="item item-rounded bg-info me-2"
-                    href="javascript:void(0)"
-                  >
-                    <i class="si si-rocket fa-2x text-white-75"></i>
-                  </a>
-                  <a
-                    class="item item-rounded bg-amethyst me-2"
-                    href="javascript:void(0)"
-                  >
-                    <i class="si si-calendar fa-2x text-white-75"></i>
-                  </a>
-                  <a
-                    class="item item-rounded bg-city me-2"
-                    href="javascript:void(0)"
-                  >
-                    <i class="si si-speedometer fa-2x text-white-75"></i>
-                  </a>
+          <BaseBlock id="timesheet" class="timesheet js-sidebar-scroll max-screen">
+            <ul class="timeline timeline-alt py-0">
+              <li class="timeline-event">
+                <div class="timeline-event-icon bg-dark">
+                  <i class="fa fa-cog"></i>
                 </div>
-              </BaseBlock>
-            </li>
-            <li class="timeline-event">
-              <div class="timeline-event-icon bg-info">
-                <i class="fab fa-twitter"></i>
-              </div>
-              <BaseBlock title="Twitter" class="timeline-event-block">
-                <template #options>
-                  <div class="timeline-event-time block-options-item fs-sm">
-                    12 hrs ago
-                  </div>
-                </template>
-
-                <p class="fw-semibold mb-2">+ 1150 Followers</p>
-                <p>You’re getting more and more followers, keep it up!</p>
-              </BaseBlock>
-            </li>
-            <li class="timeline-event">
-              <div class="timeline-event-icon bg-smooth">
-                <i class="fa fa-database"></i>
-              </div>
-              <BaseBlock title="Backup" class="timeline-event-block">
-                <template #options>
-                  <div class="timeline-event-time block-options-item fs-sm">
-                    1 day ago
-                  </div>
-                </template>
-
-                <p class="fw-semibold mb-2">Database backup completed!</p>
-                <p>
-                  Download the <a href="javascript:void(0)">latest backup</a>.
-                </p>
-              </BaseBlock>
-            </li>
-            <li class="timeline-event">
-              <div class="timeline-event-icon bg-dark">
-                <i class="fa fa-cog"></i>
-              </div>
-              <BaseBlock title="System" class="timeline-event-block">
-                <template #options>
-                  <div class="timeline-event-time block-options-item fs-sm">
-                    1 week ago
-                  </div>
-                </template>
-
-                <p class="fw-semibold mb-2">App updated to v2.02</p>
-                <p>
-                  Check the complete changelog at the
-                  <a href="javascript:void(0)">activity page</a>.
-                </p>
-              </BaseBlock>
-            </li>
-            <li class="timeline-event">
-              <div class="timeline-event-icon bg-modern">
-                <i class="fa fa-briefcase"></i>
-              </div>
-              <BaseBlock
-                title="Products"
-                class="timeline-event-block"
-                content-full
-              >
-                <template #options>
-                  <div class="timeline-event-time block-options-item fs-sm">
-                    2 months ago
-                  </div>
-                </template>
-
-                <p class="fw-semibold mb-2">1 New Product was added!</p>
-                <a class="item item-rounded bg-muted" href="javascript:void(0)">
-                  <i class="si si-wallet fa-2x text-white-75"></i>
-                </a>
-              </BaseBlock>
-            </li>
-          </ul>
+                <BaseBlock title="System" class="timeline-event-block">
+                  <template #options>
+                    <div class="timeline-event-time block-options-item fs-sm">
+                      Just Now
+                    </div>
+                  </template>
+  
+                  <p>You must wait for approval of the timesheet from the client.</p>
+                </BaseBlock>
+              </li>
+            </ul>
+          </BaseBlock>
           <!-- END Updates -->
         </div>
         <div class="col-md-5 col-xl-4">
@@ -283,30 +181,8 @@ function getCurrentPosition() {
           <!-- Ratings -->
           <BaseBlock>
             <template #title>
-              <i class="fa fa-pencil-alt text-muted me-1"></i> Feature 1
+              <i class="si si-info text-muted me-1"></i> Notifications
             </template>
-
-            <div id="map" style="height: 400px;"></div>
-
-            <div class="fs-sm push">
-              <div class="d-flex justify-content-between mb-2">
-                <div class="space-x-1">
-                  <a class="fw-semibold" href="">Danielle Jones</a>
-                  <span class="text-muted">(5/5)</span>
-                </div>
-                <div class="text-warning">
-                  <i class="fa fa-star"></i>
-                  <i class="fa fa-star"></i>
-                  <i class="fa fa-star"></i>
-                  <i class="fa fa-star"></i>
-                  <i class="fa fa-star"></i>
-                </div>
-              </div>
-              <p class="mb-0">
-                Great value for money and awesome support! Would buy again and
-                again! Thanks!
-              </p>
-            </div>
 
             <!-- <div class="fs-sm push">
               <div class="d-flex justify-content-between mb-2">

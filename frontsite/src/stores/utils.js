@@ -27,6 +27,13 @@ export default async function checkSession(token) {
     // Assuming the API returns a boolean indicating session validity
     return response.data.success;
   } catch (error) {
+    if(error.response) {
+      localStorage.clear();
+      alert(error.response.data.error.message);
+    } else {
+      alert(error);
+    }
+
     // Log or handle the error in a more informative way
     console.error('Error validating session:', error);
     return false;

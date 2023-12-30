@@ -10,3 +10,19 @@
 // If you have many custom styles, you can create and import additional files
 // For example you can create _component1.scss and include it as follows:
 // @import 'component1';
+
+
+.max-screen {
+  height: 100vh;
+  max-height: 550px;
+}
+
+.simplebar-scrollbar::before {
+  left: 0;
+  right: 0;
+  background: $primary-darker;
+
+  #timesheet & {
+    background: $white;
+  }
+}
