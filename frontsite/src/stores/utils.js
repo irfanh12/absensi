@@ -1,5 +1,40 @@
 export const baseUrl = import.meta.env.VITE_APP_CORE_API_URL;
 
+let videoStream;
+let videoElement = document.getElementById('cameraPreview');
+let snapshotElement = document.getElementById('snapshot');
+
+export function startCamera() {
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then((stream) => {
+      videoStream = stream;
+      videoElement.srcObject = stream;
+    })
+    .catch((error) => {
+      console.error('Error accessing camera:', error);
+    });
+}
+
+export function captureSnapshot() {
+  if (videoStream) {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+
+    // Set the canvas dimensions to the video stream dimensions
+    canvas.width = videoElement.videoWidth;
+    canvas.height = videoElement.videoHeight;
+
+    // Draw the current video frame onto the canvas
+    context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+    // Convert the canvas content to base64 data URL
+    const base64DataUrl = canvas.toDataURL('image/png');
+
+    // Display the snapshot
+    snapshotElement.src = base64DataUrl;
+  }
+}
+
 export function getCookieByName(name) {
   const cookies = document.cookie
     .split(';')

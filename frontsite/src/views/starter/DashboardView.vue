@@ -6,6 +6,9 @@ import { useRouter } from "vue-router";
 import SimpleBar from "simplebar";
 import { useAuth } from "@/stores/auth";
 
+// Utils
+import { startCamera, captureSnapshot } from "@/stores/utils";
+
 // Auth store
 const auth = useAuth();
 
@@ -38,7 +41,14 @@ let maps = reactive({
 });
 
 onMounted(() => {
+  // SimpleBar
   new SimpleBar(document.getElementById("timesheet"));
+  
+  // Modals
+  const myModal = document.getElementById('modal-block-popout');
+  myModal.addEventListener('shown.bs.modal', () => {
+    startCamera()
+  })
   // getCurrentPosition()
   //   .then((pos) => {
   //     // Handle the position data here
@@ -54,7 +64,6 @@ onMounted(() => {
   //     console.error(error);
   //   });
 })
-
 
 function getCurrentPosition() {
   return new Promise((resolve, reject) => {
@@ -171,7 +180,7 @@ function getCurrentPosition() {
               </div>
             </div>
             <div class="text-center push w-100">
-              <button type="button" class="btn btn-sm btn-alt-primary w-100">
+              <button type="button" class="btn btn-sm btn-alt-primary w-100" data-bs-toggle="modal" data-bs-target="#modal-block-popout">
                 Record Time
               </button>
             </div>
@@ -328,5 +337,57 @@ function getCurrentPosition() {
       </div>
     </div>
     <!-- END Page Content -->
+
+    <!-- Pop Out Block Modal -->
+    <div
+      class="modal fade"
+      id="modal-block-popout"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="modal-block-popout"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-popout modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <BaseBlock title="Modal Title" transparent class="mb-0">
+            <template #options>
+              <button
+                type="button"
+                class="btn-block-option"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              >
+                <i class="fa fa-fw fa-times"></i>
+              </button>
+            </template>
+
+            <template #content>
+              <div class="block-content fs-sm">
+                <button onclick="captureSnapshot()">Capture Snapshot</button>
+                <video id="cameraPreview" autoplay playsinline></video>
+                <img src="@/assets/images/siluet.svg" class="face ng-star-inserted">
+              </div>
+              <div class="block-content block-content-full text-end bg-body">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-alt-secondary me-1"
+                  data-bs-dismiss="modal"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-primary"
+                  data-bs-dismiss="modal"
+                >
+                  Perfect
+                </button>
+              </div>
+            </template>
+          </BaseBlock>
+        </div>
+      </div>
+    </div>
+    <!-- END Pop Out Block Modal -->
   </div>
 </template>
