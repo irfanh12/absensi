@@ -1,12 +1,19 @@
 export const baseUrl = import.meta.env.VITE_APP_CORE_API_URL;
 
 let videoStream;
-let videoElement = document.getElementById('cameraPreview');
 let snapshotElement = document.getElementById('snapshot');
 
-export function startCamera() {
-  navigator.mediaDevices.getUserMedia({ video: true })
+export function startCamera(videoElement) {
+  const constraints = {
+    video: {
+      facingMode: 'user', // use the front camera if available
+      zoom: 2, // adjust the zoom level (try different values)
+    },
+  };
+
+  navigator.mediaDevices.getUserMedia(constraints)
     .then((stream) => {
+      console.log(stream, videoElement)
       videoStream = stream;
       videoElement.srcObject = stream;
     })

@@ -41,13 +41,15 @@ let maps = reactive({
 });
 
 onMounted(() => {
+  let videoElement = document.getElementById('cameraPreview');
+
   // SimpleBar
   new SimpleBar(document.getElementById("timesheet"));
   
   // Modals
   const myModal = document.getElementById('modal-block-popout');
   myModal.addEventListener('shown.bs.modal', () => {
-    startCamera()
+    startCamera(videoElement)
   })
   // getCurrentPosition()
   //   .then((pos) => {
@@ -71,6 +73,21 @@ function getCurrentPosition() {
   });
 }
 </script>
+
+<style lang="scss" scoped>
+.capture {
+  position: relative; 
+  display: flex;
+  justify-content: center;
+
+  #cameraPreview {
+    width: 100%;
+  }
+  .face {
+    position: absolute;
+  }
+}
+</style>
 
 <template>
   <div>
@@ -362,25 +379,18 @@ function getCurrentPosition() {
             </template>
 
             <template #content>
-              <div class="block-content fs-sm">
-                <button onclick="captureSnapshot()">Capture Snapshot</button>
+              <div class="capture block-content fs-sm">
                 <video id="cameraPreview" autoplay playsinline></video>
                 <img src="@/assets/images/siluet.svg" class="face ng-star-inserted">
               </div>
               <div class="block-content block-content-full text-end bg-body">
                 <button
                   type="button"
-                  class="btn btn-sm btn-alt-secondary me-1"
-                  data-bs-dismiss="modal"
-                >
-                  Close
-                </button>
-                <button
-                  type="button"
                   class="btn btn-sm btn-primary"
                   data-bs-dismiss="modal"
+                  @click="captureSnapshot()"
                 >
-                  Perfect
+                  Take
                 </button>
               </div>
             </template>
