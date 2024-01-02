@@ -26,3 +26,11 @@
     background: $white;
   }
 }
+
+.card {
+  --bs-card-color: #212529;
+  
+  .dark-mode & {
+    --bs-card-color: #DDE2E9;
+  }
+}

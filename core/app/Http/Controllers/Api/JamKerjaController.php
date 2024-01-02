@@ -59,7 +59,7 @@ class JamKerjaController extends Controller
             $presensi->status           = $start_time ? 'Start Time' : 'End Time';
             $presensi->jamkerja_id      = $jamkerja->id;
             $presensi->karyawan_id      = $user->id;
-            $presensi->photo            = $this->storeImage($input['photo']);
+            $presensi->photo            = $this->storeImage($input['photo']['base64image']);
             $presensi->map_direction    = json_encode($input['map_direction']);
             $presensi->time             = $input['time'];
             $presensi->created_at       = now()->timestamp;

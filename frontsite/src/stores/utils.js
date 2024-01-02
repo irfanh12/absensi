@@ -1,9 +1,13 @@
 export const baseUrl = import.meta.env.VITE_APP_CORE_API_URL;
 
 let videoStream;
-let snapshotElement = document.getElementById('snapshot');
-
-export function startCamera(videoElement) {
+/**
+ * Starts the camera and streams the video to a specified video element.
+ *
+ * @param {HTMLElement} videoElement - The HTML video element to stream the video to.
+ * @return {void} This function does not return a value.
+ */
+export function startCamera(videoElement, formcontrol) {
   const constraints = {
     video: {
       facingMode: 'user', // use the front camera if available
@@ -11,18 +15,43 @@ export function startCamera(videoElement) {
     },
   };
 
+  formcontrol.value.statusLoading()
+
   navigator.mediaDevices.getUserMedia(constraints)
     .then((stream) => {
-      console.log(stream, videoElement)
       videoStream = stream;
       videoElement.srcObject = stream;
+
+      formcontrol.value.statusNormal()
     })
     .catch((error) => {
       console.error('Error accessing camera:', error);
     });
 }
 
-export function captureSnapshot() {
+/**
+ * Stops the camera stream and clears the video element.
+ *
+ * @param {none} none - No parameters.
+ * @return {none} No return value.
+ */
+export function stopCamera(videoElement) {
+  if (videoStream) {
+    const tracks = videoStream.getTracks();
+
+    tracks.forEach(track => track.stop());
+    videoElement.srcObject = null;
+    videoStream = null;
+  }
+}
+
+/**
+ * Capture a snapshot of a video element.
+ *
+ * @param {HTMLVideoElement} videoElement - The video element to capture the snapshot from.
+ * @return {Object|Boolean} An object containing the URL and base64 image data of the captured snapshot, or `false` if the video stream is not available.
+ */
+export function captureSnapshot(videoElement) {
   if (videoStream) {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
@@ -35,13 +64,45 @@ export function captureSnapshot() {
     context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
 
     // Convert the canvas content to base64 data URL
-    const base64DataUrl = canvas.toDataURL('image/png');
+    const base64image = canvas.toDataURL('image/png');
 
-    // Display the snapshot
-    snapshotElement.src = base64DataUrl;
+    // Convert base64 data URL to Blob
+    const blob = dataURLtoBlob(base64image);
+    return {
+      url: URL.createObjectURL(blob),
+      base64image: base64image
+    }
   }
+
+  return false;
 }
 
+/**
+ * Converts a data URL to a Blob object.
+ *
+ * @param {string} dataUrl - The data URL to be converted.
+ * @return {Blob} The Blob object representing the converted data URL.
+ */
+function dataURLtoBlob(dataUrl) {
+  const parts = dataUrl.split(';base64,');
+  const contentType = parts[0].split(':')[1];
+  const raw = window.atob(parts[1]);
+  const rawLength = raw.length;
+  const uint8Array = new Uint8Array(rawLength);
+
+  for (let i = 0; i < rawLength; ++i) {
+    uint8Array[i] = raw.charCodeAt(i);
+  }
+
+  return new Blob([uint8Array], { type: contentType });
+}
+
+/**
+ * Retrieves the value of a cookie by its name.
+ *
+ * @param {string} name - The name of the cookie to retrieve.
+ * @return {string|undefined} The value of the cookie, or undefined if the cookie does not exist.
+ */
 export function getCookieByName(name) {
   const cookies = document.cookie
     .split(';')
@@ -56,6 +117,12 @@ export function getCookieByName(name) {
   return cookies[name];
 }
 
+/**
+ * Checks the session validity using the provided token.
+ *
+ * @param {string} token - The token used to authenticate the session.
+ * @return {boolean} Returns a boolean indicating the session validity.
+ */
 export default async function checkSession(token) {
   
   try {

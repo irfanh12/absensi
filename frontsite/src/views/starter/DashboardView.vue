@@ -1,13 +1,21 @@
 <script setup>
 // Vue Packages
-import { onMounted, reactive } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 
 import SimpleBar from "simplebar";
 import { useAuth } from "@/stores/auth";
 
+// Refs
+const formcontrolCamera = ref(null);
+const formcontrolMaps = ref(null);
+const formcontrolResult = ref(null);
+
+// Router
+const router = useRouter();
+
 // Utils
-import { startCamera, captureSnapshot } from "@/stores/utils";
+import { startCamera, stopCamera, captureSnapshot } from "@/stores/utils";
 
 // Auth store
 const auth = useAuth();
@@ -33,44 +41,120 @@ if (dayOfWeek >= 1 && dayOfWeek <= 5) {
 let user = localStorage.getItem("user");
 user = JSON.parse(user);
 
-
-// Current Location
-let maps = reactive({
-  lat: null,
-  lng: null,
+// Data Reactive
+let data = reactive({
+  photo: {
+    url: "",
+    base64image: "",
+  },
+  map_direction: {
+    lat: null,
+    lng: null,
+  },
+  time: "",
 });
 
 onMounted(() => {
   let videoElement = document.getElementById('cameraPreview');
-
   // SimpleBar
   new SimpleBar(document.getElementById("timesheet"));
   
   // Modals
   const myModal = document.getElementById('modal-block-popout');
+  const myModalDirection = document.getElementById('modal-block-direction');
+  const myModalResult = document.getElementById('modal-block-result');
+
+  // Event Listener
   myModal.addEventListener('shown.bs.modal', () => {
-    startCamera(videoElement)
+    startCamera(videoElement, formcontrolCamera)
   })
-  // getCurrentPosition()
-  //   .then((pos) => {
-  //     // Handle the position data here
-  //     maps.lat = pos.coords.latitude;
-  //     maps.lng = pos.coords.longitude;
-  //     new google.maps.Map(document.getElementById("map"), {
-  //       center: { lat: maps.lat, lng: maps.lng }, // Example location (San Francisco)
-  //       zoom: 12, // Adjust the zoom level as needed
-  //     });
-  //   })
-  //   .catch((error) => {
-  //     // Handle any errors that occur
-  //     console.error(error);
-  //   });
+
+  myModal.addEventListener('hidden.bs.modal', () => {
+    stopCamera(videoElement, formcontrolMaps)
+
+    // Open New Modal
+    const theModal = new bootstrap.Modal(myModalDirection)
+    theModal.show();
+  })
+
+
+  myModalDirection.addEventListener('shown.bs.modal', async () => {
+    try {
+      const pos = await getCurrentPosition();
+      const { latitude, longitude } = pos.coords;
+
+      formcontrolMaps.value.statusLoading();
+
+      data.map_direction.lat = latitude;
+      data.map_direction.lng = longitude;
+      
+      new google.maps.Map(document.getElementById("map"), {
+        center: { lat: latitude, lng: longitude },
+        zoom: 12,
+      });
+
+      setTimeout(() => {
+        formcontrolMaps.value.statusNormal();
+      }, 1000);
+    } catch (error) {
+      // Handle any errors that occur
+      console.error(error);
+    }
+  })
+
+  myModalDirection.addEventListener('hidden.bs.modal', () => {
+    data.time = moment().format("HH:mm")
+
+    // Open New Modal
+    const theModal = new bootstrap.Modal(myModalResult)
+    theModal.show();
+  })
+
+  myModalResult.addEventListener('shown.bs.modal', () => {
+    formcontrolResult.value.statusLoading();
+
+    new google.maps.Map(document.getElementById("mapResult"), {
+      center: { lat: data.map_direction.lat, lng: data.map_direction.lng },
+      zoom: 12,
+    });
+
+    setTimeout(() => {
+      formcontrolResult.value.statusNormal();
+    }, 500);
+  })
+
+  myModalResult.addEventListener('hidden.bs.modal', () => {
+    // Destroy Map
+    document.getElementById('mapResult').innerHTML
+  })
 })
+
+function takeaction() {
+  let videoElement = document.getElementById('cameraPreview');
+  data.photo = captureSnapshot(videoElement);
+}
+
+function takedirection() {
+  document.getElementById('map').innerHTML
+}
 
 function getCurrentPosition() {
   return new Promise((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(resolve, reject);
   });
+}
+
+async function storePresensi() {
+  try {    
+    const dateNowTrim = moment().format("YYYYMMDD")
+    const response = await axios.post(`api/v1/shift/presensi/${dateNowTrim}`, data);
+
+    console.log(response.data)
+
+  } catch (error) {
+    // Handle any errors that occur
+    console.error(error);
+  }
 }
 </script>
 
@@ -79,12 +163,25 @@ function getCurrentPosition() {
   position: relative; 
   display: flex;
   justify-content: center;
+  padding: 1.25rem 1.25rem;
 
   #cameraPreview {
     width: 100%;
+    max-height: 50%;
   }
+
   .face {
     position: absolute;
+    width: 100%;
+    padding: 0 20px;
+  }
+}
+
+.result {
+  position: relative;
+
+  .card {
+    border-color: transparent;
   }
 }
 </style>
@@ -363,11 +460,13 @@ function getCurrentPosition() {
       role="dialog"
       aria-labelledby="modal-block-popout"
       aria-hidden="true"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
     >
       <div class="modal-dialog modal-dialog-popout modal-dialog-centered" role="document">
         <div class="modal-content">
-          <BaseBlock title="Modal Title" transparent class="mb-0">
-            <template #options>
+          <BaseBlock ref="formcontrolCamera" transparent class="mb-0">
+            <!-- <template #options>
               <button
                 type="button"
                 class="btn-block-option"
@@ -376,21 +475,106 @@ function getCurrentPosition() {
               >
                 <i class="fa fa-fw fa-times"></i>
               </button>
-            </template>
+            </template> -->
 
             <template #content>
               <div class="capture block-content fs-sm">
                 <video id="cameraPreview" autoplay playsinline></video>
-                <img src="@/assets/images/siluet.svg" class="face ng-star-inserted">
               </div>
-              <div class="block-content block-content-full text-end bg-body">
+              <div class="block-content block-content-full text-end bg-body d-flex justify-content-center">
                 <button
                   type="button"
-                  class="btn btn-sm btn-primary"
+                  class="btn btn-sm btn-primary w-100"
                   data-bs-dismiss="modal"
-                  @click="captureSnapshot()"
-                >
-                  Take
+                  @click="takeaction()">
+                  Take A Snapshot
+                </button>
+              </div>
+            </template>
+          </BaseBlock>
+        </div>
+      </div>
+    </div>
+    <!-- END Pop Out Block Modal -->
+    
+    <!-- Pop Out Block Modal -->
+    <div
+      class="modal fade"
+      id="modal-block-direction"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="modal-block-direction"
+      aria-hidden="true"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+    >
+      <div class="modal-dialog modal-dialog-popout modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <BaseBlock ref="formcontrolMaps" transparent class="mb-0">
+
+            <template #content>
+              <div class="block-content fs-sm">
+                <div id="map" style="height: 400px;"></div>
+              </div>
+              <div class="block-content block-content-full text-end bg-body d-flex justify-content-center">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-primary w-100"
+                  data-bs-dismiss="modal"
+                  @click="takedirection()">
+                  Take A Direction
+                </button>
+              </div>
+            </template>
+          </BaseBlock>
+        </div>
+      </div>
+    </div>
+    <!-- END Pop Out Block Modal -->
+
+    <!-- Pop Out Block Modal -->
+    <div
+      class="modal fade"
+      id="modal-block-result"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="modal-block-result"
+      aria-hidden="true"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+    >
+      <div class="modal-dialog modal-dialog-popout modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <BaseBlock ref="formcontrolResult" transparent class="mb-0">
+
+            <template #content>
+              <div class="result block-content fs-sm">
+                <div class="card">
+                  <div id="mapResult" style="height: 250px;" class="card-img-top"></div>
+                  <div class="card-body">
+                    <p class="card-text">
+                      <div class="d-flex flex-column">
+                        <div class="d-flex flex-column justify-content-center align-items-center mb-2">
+                          <h3 class="fw-bold mb-0">{{ auth.fullname }}</h3>
+                          <p class="mb-0">{{ nowDate }}, <span class="fw-bold text-primary">{{ data.time }}</span></p>
+                        </div>
+                        <div class="d-flex flex-column justify-content-center align-items-center mb-2">
+                          <img :src="data.photo.url" alt="Result Attendance Photo" class="img-thumbnail mb-2" style="width: 250px" />
+                          <small>Attendance Photo</small>
+                        </div>
+                        
+                      </div>  
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="block-content block-content-full text-end bg-body d-flex justify-content-center">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-primary w-100"
+                  data-bs-dismiss="modal"
+                  @click="storePresensi()">
+                  Save Attendance
                 </button>
               </div>
             </template>
