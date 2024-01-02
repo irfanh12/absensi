@@ -6,19 +6,24 @@ import { useRouter } from "vue-router";
 import SimpleBar from "simplebar";
 import { useAuth } from "@/stores/auth";
 
+// Router
+const router = useRouter();
+
+// Utils
+import { startCamera, stopCamera, captureSnapshot, justNowDate } from "@/stores/utils";
+
 // Refs
 const formcontrolCamera = ref(null);
 const formcontrolMaps = ref(null);
 const formcontrolResult = ref(null);
 
-// Router
-const router = useRouter();
+const presensiEmployee = ref(null);
 
-// Utils
-import { startCamera, stopCamera, captureSnapshot } from "@/stores/utils";
+const toast2 = ref(null);
 
 // Auth store
 const auth = useAuth();
+const permissions = auth.permissions();
 
 // Now Date
 const nowDate = moment().format("ddd, DD MMM YYYY");
@@ -54,7 +59,22 @@ let data = reactive({
   time: "",
 });
 
+let timesheet = reactive({
+  lists: [],
+  data: {
+    remarks: "",
+  }
+})
+
+// toastMessage Reactive
+let toastNotif = reactive({
+  date: moment(),
+  message: '',
+})
+
 onMounted(() => {
+  // Load Data
+
   let videoElement = document.getElementById('cameraPreview');
   // SimpleBar
   new SimpleBar(document.getElementById("timesheet"));
@@ -127,6 +147,11 @@ onMounted(() => {
     // Destroy Map
     document.getElementById('mapResult').innerHTML
   })
+
+  const toastElement = document.getElementById("toast-example-2");
+  toast2.value = new window.bootstrap.Toast(toastElement);
+
+  getPresensiEmployee();
 })
 
 function takeaction() {
@@ -144,21 +169,87 @@ function getCurrentPosition() {
   });
 }
 
-async function storePresensi() {
+async function getPresensiEmployee() {
+  presensiEmployee.value.statusLoading()
+
+  try {
+    const dateNowTrim = moment().format("YYYYMMDD")
+    const response = await axios.get(`api/v1/shift/presensi/employee/${dateNowTrim}`);
+    const respData = response.data;
+
+    if(respData.success) {
+      presensiEmployee.value.statusNormal()
+  
+      const { start_time, end_time } = respData.data;
+      auth.setPresensi(start_time, end_time);
+    }
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function storePresensiEmployee() {
   try {    
     const dateNowTrim = moment().format("YYYYMMDD")
-    const response = await axios.post(`api/v1/shift/presensi/${dateNowTrim}`, data);
+    const response = await axios.post(`api/v1/shift/presensi/employee/${dateNowTrim}`, data);
+    const respData = response.data
 
-    console.log(response.data)
+    toastNotif.message = respData.message
 
+    data = {
+      photo: {
+        url: "",
+        base64image: "",
+      },
+      map_direction: {
+        lat: null,
+        lng: null,
+      },
+      time: "",
+    }
+
+    // Open Toast
+    const toastElement = document.getElementById("toast-example-2");
+    const toastInstance = bootstrap.Toast.getOrCreateInstance(toastElement);
+    toastInstance.show();
+
+    // Load Data Presensi Again
+    getPresensiEmployee()
   } catch (error) {
     // Handle any errors that occur
+    console.error(error);
+  }
+}
+
+async function storeTimesheet() {
+  try {
+    const response = await axios.post(`api/v1/timesheet/store`, timesheet.data);
+    const respData = response.data;
+
+    toastNotif.message = respData.message;
+
+    const modalElement = document.getElementById("modal-block-timesheet");
+    const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
+    modalInstance.hide()
+
+    if (!modalInstance._isShown) {
+      timesheet.data.remarks = "";
+
+      const toastElement = document.getElementById("toast-example-2");
+      const toastInstance = bootstrap.Toast.getOrCreateInstance(toastElement);
+      toastInstance.show();
+    }
+  } catch (error) {
     console.error(error);
   }
 }
 </script>
 
 <style lang="scss" scoped>
+.content.content-boxed {
+  margin: 1.875rem;
+}
+
 .capture {
   position: relative; 
   display: flex;
@@ -272,7 +363,7 @@ async function storePresensi() {
         </div>
         <div class="col-md-5 col-xl-4">
           <!-- Products -->
-          <BaseBlock>
+          <BaseBlock ref="presensiEmployee">
             <template #title>
               <i class="fa fa-briefcase text-muted me-1"></i> Attendance
             </template>
@@ -286,11 +377,11 @@ async function storePresensi() {
             <div class="d-flex align-items-center push">
               <div class="flex-grow-0 me-4">
                 <div class="fw-semibold">Start Time</div>
-                <div class="fs-sm text-success">--:--</div>
+                <div class="fs-sm fw-bold text-success">{{ auth.presensi.start_time }}</div>
               </div>
               <div class="flex-grow-1">
                 <div class="fw-semibold">End Time</div>
-                <div class="fs-sm text-danger">--:--</div>
+                <div class="fs-sm fw-bold text-danger">{{ auth.presensi.end_time }}</div>
               </div>
             </div>
             <div class="text-center push w-100">
@@ -300,6 +391,39 @@ async function storePresensi() {
             </div>
           </BaseBlock>
           <!-- END Products -->
+
+          <!-- Ratings -->
+          <BaseBlock v-show="permissions.timesheet.includes(auth.position)">
+            <template #title>
+              <i class="si si-info text-muted me-1"></i> Timesheet
+            </template>
+
+            <div class="fs-sm push" v-for="a in 2">
+              <div class="d-flex justify-content-between mb-2">
+                <div class="space-x-1">
+                  <a class="fw-semibold" href="">Alice Moore</a>
+                  <span class="text-muted"></span>
+                </div>
+                <!-- <div class="text-warning">
+                  <i class="fa fa-star"></i>
+                  <i class="fa fa-star"></i>
+                  <i class="fa fa-star"></i>
+                  <i class="fa fa-star"></i>
+                  <i class="fa fa-star"></i>
+                </div> -->
+              </div>
+              <p class="mb-0">
+                Flawless design execution! I'm really impressed with the product,
+                it really helped me build my app so fast! Thank you!
+              </p>
+            </div>
+            <div class="text-center push w-100">
+              <button type="button" class="btn btn-sm btn-info w-100" data-bs-toggle="modal" data-bs-target="#modal-block-timesheet">
+                Add Timesheet
+              </button>
+            </div>
+          </BaseBlock>
+          <!-- END Ratings -->
 
           <!-- Ratings -->
           <BaseBlock>
@@ -573,7 +697,7 @@ async function storePresensi() {
                   type="button"
                   class="btn btn-sm btn-primary w-100"
                   data-bs-dismiss="modal"
-                  @click="storePresensi()">
+                  @click="storePresensiEmployee()">
                   Save Attendance
                 </button>
               </div>
@@ -583,5 +707,79 @@ async function storePresensi() {
       </div>
     </div>
     <!-- END Pop Out Block Modal -->
+
+    <!-- Pop Out Block Modal -->
+    <div
+      class="modal fade"
+      id="modal-block-timesheet"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="modal-block-timesheet"
+      aria-hidden="true"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+    >
+      <div class="modal-dialog modal-dialog-popout modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <BaseBlock title="Add Timesheet" transparent class="mb-0">
+
+            <template #content>
+              <form @submit.prevent="storeTimesheet()">
+                <div class="result block-content fs-sm p-0">
+                  <div class="card">
+                    <div class="card-body">
+                      <label class="form-label" for="example-textarea-input">Remarks</label>
+                      <textarea
+                        class="form-control"
+                        id="example-textarea-input"
+                        name="example-textarea-input"
+                        rows="7"
+                        placeholder="Remarks content.."
+                        v-model="timesheet.data.remarks"
+                      ></textarea>
+                    </div>
+                  </div>
+                </div>
+                <div class="block-content block-content-full text-end bg-body d-flex justify-content-center">
+                  <button
+                    type="submit"
+                    class="btn btn-sm btn-primary w-100">
+                    Save Timesheet
+                  </button>
+                </div>
+              </form>
+            </template>
+          </BaseBlock>
+        </div>
+      </div>
+    </div>
+    <!-- END Pop Out Block Modal -->
+
+    <div class="position-fixed bottom-0 end-0 p-3 space-y-3" style="z-index: 9999">
+      <!-- Toast Example 2 -->
+      <div
+        id="toast-example-2"
+        class="toast fade hide"
+        data-delay="4000"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true">
+        <div class="toast-header">
+          <i class="si si-wrench text-dark me-2"></i>
+          <strong class="me-auto">System</strong>
+          <small class="text-muted">{{ justNowDate(toastNotif.date) }}</small>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="toast"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="toast-body">
+          {{ toastNotif.message }}
+        </div>
+      </div>
+      <!-- END Toast Example 2 -->
+    </div>
   </div>
 </template>

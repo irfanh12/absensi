@@ -98,6 +98,23 @@ function dataURLtoBlob(dataUrl) {
 }
 
 /**
+ * Generates a date string representing the time difference between the input date and the current moment.
+ *
+ * @param {Date} date - The input date to compare to the current moment.
+ * @return {string} - A string representation of the time difference between the input date and the current moment.
+ */
+export function justNowDate(date) {
+  const now = moment();
+  const diffInSeconds = now.diff(date, 'seconds');
+  
+  if (diffInSeconds < 5) {
+    return 'just now';
+  } else {
+    return moment(date).fromNow();
+  }
+}
+
+/**
  * Retrieves the value of a cookie by its name.
  *
  * @param {string} name - The name of the cookie to retrieve.
@@ -133,7 +150,8 @@ export default async function checkSession(token) {
       }
     });
 
-    // Assuming the API returns a boolean indicating session validity
+    // Assuming the API returns a boolean indicating session validity    
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`
     return response.data.success;
   } catch (error) {
     if(error.response) {

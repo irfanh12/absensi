@@ -6,6 +6,10 @@ export const useAuth = defineStore({
   state: () => ({
     fullname: localStorage.getItem("fullname"),
     position: localStorage.getItem("position"),
+    presensi: {
+      start_time: '--:--',
+      end_time: '--:--',
+    },
   }),
   actions: {
     login(fullname, position) {
@@ -20,6 +24,16 @@ export const useAuth = defineStore({
 
       delete axios.defaults.headers.common["Authorization"];
       router.push({ name: "login" })
+    },
+    setPresensi(start_time, end_time) {
+      this.presensi.start_time = start_time
+      this.presensi.end_time = end_time
+    },
+    permissions() {
+      return {
+        timesheet: ['Karyawan Outsource', 'Administrator'],
+        presensi: ['Administrator', 'Klien', 'Human Resource', 'Karyawan', 'Karyawan Outsource'],
+      }      
     },
   }
 });
