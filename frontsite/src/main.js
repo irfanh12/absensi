@@ -27,6 +27,7 @@ import { baseUrl } from "@/stores/utils.js";
 window.axios = axios;
 
 window.axios.defaults.baseURL = `${baseUrl}/`;
+window.axios.defaults.headers.common["ngrok-skip-browser-warning"] = '1'
 window.axios.defaults.headers.common["Accept"] = "application/json";
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
