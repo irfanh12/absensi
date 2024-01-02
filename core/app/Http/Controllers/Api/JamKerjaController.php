@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use Carbon\Carbon;
 use App\Models\JamKerja;
 use App\Models\Presensi;
 use App\Http\Controllers\Controller;
@@ -21,7 +22,7 @@ class JamKerjaController extends Controller
      * @return Illuminate\Http\JsonResponse The JSON response containing the working hours.
      */
 
-    public function getPresensi(Request $request, $dateDay) {
+    public function getWorkHour(Request $request, $dateDay) {
         $responseOutput = $this->responseOutput;
 
         try {
@@ -38,7 +39,52 @@ class JamKerjaController extends Controller
         }
     }
 
-    public function postPresensi(Request $request, $dateDay) {
+    public function getPresensiEmployee(Request $request, $dateDay) {
+        $responseOutput = $this->responseOutput;
+
+        $user = Auth::user();
+        $input = $request->all();
+        $nowTimestamp = now()->timestamp;
+
+        try {
+            $dateDay = $this->dateDay($dateDay);
+            $jamkerja = JamKerja::where('hari', 'like', "%$dateDay%")->first();
+
+            $startTime = Carbon::createFromTimestamp($nowTimestamp)->startOfDay()->timestamp;
+            $endTime = Carbon::createFromTimestamp($nowTimestamp)->endOfDay()->timestamp;
+
+            $presensi = Presensi::where([
+                ['karyawan_id', $user->id],
+                ['jamkerja_id', $jamkerja->id],
+                ['created_at', '>=', $startTime],
+                ['created_at', '<', $endTime],
+            ])->get();
+
+            $data = [
+                'start_time' => "--:--",
+                'end_time' => "--:--",
+            ];
+
+
+            if($presensi) {
+                $presensi_start = $presensi->where('status', 'Start Time')->first();
+                $presensi_end = $presensi->where('status', 'End Time')->last();
+
+                $data['start_time'] = $presensi_start->time;
+                $data['end_time'] = $presensi_end ? $presensi_end->time : '--:--';
+            }
+
+            $responseOutput['success']  = true;
+            $responseOutput['message']  = 'Success';
+            $responseOutput['data']     = $data;
+
+            return response()->json($responseOutput);
+        } catch(Exception $e) {
+            abort(500, $e->getMessage());
+        }
+    }
+
+    public function postPresensiEmployee(Request $request, $dateDay) {
         $responseOutput = $this->responseOutput;
 
         $user = Auth::user();

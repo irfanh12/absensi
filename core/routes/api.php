@@ -48,8 +48,10 @@ Route::prefix('v1')->group(function () {
 
     Route::controller(JamKerjaController::class)->group(function () {
         Route::prefix('shift')->group(function () {
-            Route::get('/presensi/{dateDay}', 'getPresensi')->middleware(['auth:sanctum']);
-            Route::post('/presensi/{dateDay}', 'postPresensi')->middleware(['auth:sanctum']);
+            Route::get('/presensi/work-hour/{dateDay}', 'getPresensi')->middleware(['auth:sanctum']);
+
+            Route::get('/presensi/employee/{dateDay}', 'getPresensiEmployee')->middleware(['auth:sanctum']);
+            Route::post('/presensi/employee/{dateDay}', 'postPresensiEmployee')->middleware(['auth:sanctum']);
         });
     });
 
