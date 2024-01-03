@@ -75,7 +75,7 @@ class KaryawanController extends Controller
             ];
 
             return response()->json($responseOutput);
-        } catch(Exception $e) {
+        } catch(\Exception $e) {
             DB::rollback();
             abort(500, $e->getMessage());
         }

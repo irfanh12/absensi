@@ -57,6 +57,8 @@ Route::prefix('v1')->group(function () {
 
     Route::controller(TimesheetController::class)->group(function () {
         Route::prefix('timesheet')->group(function () {
+            Route::get('/employee', 'getTimesheetEmployee')->middleware(['auth:sanctum']);
+
             Route::post('/store', 'store')->middleware(['auth:sanctum']);
             Route::post('/approve/{uuid}', 'approve')->middleware(['auth:sanctum']);
         });

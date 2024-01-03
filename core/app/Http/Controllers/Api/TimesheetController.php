@@ -36,7 +36,7 @@ class TimesheetController extends Controller
             DB::commit();
 
             return response()->json($responseOutput);
-        } catch(Exception $e) {
+        } catch(\Exception $e) {
             DB::rollback();
             abort(500, $e->getMessage());
         }
@@ -78,8 +78,32 @@ class TimesheetController extends Controller
             }
 
             abort(500, $responseOutput['message']);
-        } catch(Exception $e) {
+        } catch(\Exception $e) {
             DB::rollback();
+            abort(500, $e->getMessage());
+        }
+    }
+
+    public function getTimesheetEmployee(Request $request) {
+        $responseOutput = $this->responseOutput;
+
+        $user = Auth::user();
+        $nowTimestamp = now()->timestamp;
+
+        try {
+            $timesheet = Timesheet::where([
+                ['karyawan_id', $user->id],
+                ['created_at', '<=', $nowTimestamp],
+            ])->limit(4)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            $responseOutput['success']  = true;
+            $responseOutput['message']  = 'Great! Your timesheet has been successfully loaded.';
+            $responseOutput['data']     = $timesheet;
+
+            return response()->json($responseOutput);
+        } catch(\Exception $e) {
             abort(500, $e->getMessage());
         }
     }

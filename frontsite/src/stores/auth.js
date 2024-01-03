@@ -6,6 +6,7 @@ export const useAuth = defineStore({
   state: () => ({
     fullname: localStorage.getItem("fullname"),
     position: localStorage.getItem("position"),
+    timesheets: [],
     presensi: {
       start_time: '--:--',
       end_time: '--:--',
@@ -28,6 +29,9 @@ export const useAuth = defineStore({
     setPresensi(start_time, end_time) {
       this.presensi.start_time = start_time
       this.presensi.end_time = end_time
+    },
+    setTimesheet(timesheets) {
+      this.timesheets = timesheets
     },
     permissions() {
       return {

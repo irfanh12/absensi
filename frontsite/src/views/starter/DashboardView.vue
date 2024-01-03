@@ -18,6 +18,7 @@ const formcontrolMaps = ref(null);
 const formcontrolResult = ref(null);
 
 const presensiEmployee = ref(null);
+const timesheetEmployee = ref(null);
 
 const toast2 = ref(null);
 
@@ -27,6 +28,7 @@ const permissions = auth.permissions();
 
 // Now Date
 const nowDate = moment().format("ddd, DD MMM YYYY");
+const nowDateWithOutYear = moment().format("ddd, DD MMM");
 
 // Differential Date
 const currentDate = new Date();
@@ -152,6 +154,7 @@ onMounted(() => {
   toast2.value = new window.bootstrap.Toast(toastElement);
 
   getPresensiEmployee();
+  getTimesheetEmployee();
 })
 
 function takeaction() {
@@ -167,6 +170,24 @@ function getCurrentPosition() {
   return new Promise((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(resolve, reject);
   });
+}
+
+async function getTimesheetEmployee() {
+  timesheetEmployee.value.statusLoading()
+
+  try {
+    const dateNowTrim = moment().format("YYYYMMDD")
+    const response = await axios.get(`api/v1/timesheet/employee`);
+    const respData = response.data;
+
+    if(respData.success) {
+      timesheetEmployee.value.statusNormal()
+  
+      auth.setTimesheet(respData.data);
+    }
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 async function getPresensiEmployee() {
@@ -393,16 +414,16 @@ async function storeTimesheet() {
           <!-- END Products -->
 
           <!-- Ratings -->
-          <BaseBlock v-show="permissions.timesheet.includes(auth.position)">
+          <BaseBlock ref="timesheetEmployee" v-show="permissions.timesheet.includes(auth.position)">
             <template #title>
               <i class="si si-info text-muted me-1"></i> Timesheet
             </template>
 
-            <div class="fs-sm push" v-for="a in 2">
+            <div class="fs-sm push" v-for="timesheet in auth.timesheets" :key="timesheet">
               <div class="d-flex justify-content-between mb-2">
-                <div class="space-x-1">
-                  <a class="fw-semibold" href="">Alice Moore</a>
-                  <span class="text-muted"></span>
+                <div class="space-x-1 w-100 d-flex justify-content-between align-items-center">
+                  <span class="fw-semibold text-gray-lighter">{{ nowDateWithOutYear }}</span>
+                  <span class="badge rounded-pill text-bg-primary" :class="timesheet.status.class">{{ timesheet.status.label }}</span>
                 </div>
                 <!-- <div class="text-warning">
                   <i class="fa fa-star"></i>
@@ -412,10 +433,7 @@ async function storeTimesheet() {
                   <i class="fa fa-star"></i>
                 </div> -->
               </div>
-              <p class="mb-0">
-                Flawless design execution! I'm really impressed with the product,
-                it really helped me build my app so fast! Thank you!
-              </p>
+              <p class="mb-0 text-gray">{{ timesheet.remarks }}</p>
             </div>
             <div class="text-center push w-100">
               <button type="button" class="btn btn-sm btn-info w-100" data-bs-toggle="modal" data-bs-target="#modal-block-timesheet">

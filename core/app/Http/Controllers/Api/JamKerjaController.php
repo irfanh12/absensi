@@ -34,7 +34,7 @@ class JamKerjaController extends Controller
             $responseOutput['data'] = $jamkerja;
 
             return response()->json($responseOutput);
-        } catch(Exception $e) {
+        } catch(\Exception $e) {
             abort(500, $e->getMessage());
         }
     }
@@ -65,8 +65,7 @@ class JamKerjaController extends Controller
                 'end_time' => "--:--",
             ];
 
-
-            if($presensi) {
+            if($presensi->count()) {
                 $presensi_start = $presensi->where('status', 'Start Time')->first();
                 $presensi_end = $presensi->where('status', 'End Time')->last();
 
@@ -75,11 +74,11 @@ class JamKerjaController extends Controller
             }
 
             $responseOutput['success']  = true;
-            $responseOutput['message']  = 'Success';
+            $responseOutput['message']  = 'Success! Your attendance has been successfully loaded.';
             $responseOutput['data']     = $data;
 
             return response()->json($responseOutput);
-        } catch(Exception $e) {
+        } catch(\Exception $e) {
             abort(500, $e->getMessage());
         }
     }
@@ -121,7 +120,7 @@ class JamKerjaController extends Controller
             DB::commit();
 
             return response()->json($responseOutput);
-        } catch(Exception $e) {
+        } catch(\Exception $e) {
             DB::rollback();
             abort(500, $e->getMessage());
         }
