@@ -30,7 +30,7 @@ class JamKerjaController extends Controller
             $jamkerja = JamKerja::where('hari', 'like', "%$dateDay%")->first();
 
             $responseOutput['success'] = true;
-            $responseOutput['message'] = 'Success';
+            $responseOutput['message'] = trans('response.success.post_presensi'); 'Success';
             $responseOutput['data'] = $jamkerja;
 
             return response()->json($responseOutput);
@@ -114,7 +114,7 @@ class JamKerjaController extends Controller
             unset($presensi->id);
 
             $responseOutput['success'] = true;
-            $responseOutput['message'] = 'Success';
+            $responseOutput['message'] = trans('response.success.post_presensi');
             $responseOutput['data'] = $presensi;
 
             DB::commit();

@@ -35,6 +35,9 @@ export const useAuth = defineStore({
     },
     permissions() {
       return {
+        karyawan: ['Administrator', 'Human Resource'],
+        klien: ['Administrator', 'Human Resource'],
+        timesheet_data: ['Administrator', 'Human Resource', 'Klien'],
         timesheet: ['Karyawan Outsource', 'Administrator'],
         presensi: ['Administrator', 'Klien', 'Human Resource', 'Karyawan', 'Karyawan Outsource'],
       }      

@@ -5,11 +5,17 @@ import NProgress from "nprogress/nprogress.js";
 // AUTH
 import auth from "@/router/menus/auth";
 import dashboard from "@/router/menus/dashboard";
+import karyawan from "@/router/menus/karyawan";
+import klien from "@/router/menus/klien";
+import timesheet from "@/router/menus/timesheet";
 
 // Set all routes
 const routes = [
   ...auth,
   ...dashboard,
+  ...karyawan,
+  ...klien,
+  ...timesheet,
 ]
 
 // Create Router

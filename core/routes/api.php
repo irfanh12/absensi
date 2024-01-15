@@ -40,9 +40,11 @@ Route::prefix('v1')->group(function () {
 
     Route::controller(KaryawanController::class)->group(function () {
         Route::prefix('employee')->group(function () {
-            Route::post('store', 'store')->middleware(['auth:sanctum', 'ability:user_type:admin,user_type:hr']);
-            Route::put('{id}/update', 'update')->middleware(['auth:sanctum', 'ability:user_type:admin,user_type:hr']);
-            Route::delete('{id}/delete', 'destroy')->middleware(['auth:sanctum', 'ability:user_type:admin,user_type:hr']);
+            Route::get('lists', 'lists')->middleware(['auth:sanctum']);
+
+            Route::post('store', 'store')->middleware(['auth:sanctum']);
+            Route::put('{id}/update', 'update')->middleware(['auth:sanctum']);
+            Route::delete('{id}/destroy', 'destroy')->middleware(['auth:sanctum']);
         });
     });
 

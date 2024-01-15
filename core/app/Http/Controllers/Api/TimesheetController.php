@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\UserType;
+use Carbon\Carbon;
+
+use App\Models\Helper;
 use App\Models\Timesheet;
 use App\Http\Controllers\Controller;
 
@@ -12,6 +14,14 @@ use Illuminate\Support\Facades\Auth;
 
 class TimesheetController extends Controller
 {
+    /**
+     * Stores the timesheet data for a given user.
+     *
+     * @param Request $request The request object containing the timesheet data.
+     * @param mixed $dateDay The date or day for which the timesheet is being stored.
+     * @throws \Exception If an error occurs while storing the timesheet.
+     * @return \Illuminate\Http\JsonResponse The JSON response containing the success status, message, and time information.
+     */
     public function store(Request $request) {
         $responseOutput = $this->responseOutput;
 
@@ -20,18 +30,14 @@ class TimesheetController extends Controller
 
         DB::beginTransaction();
         try {
-            $input['karyawan_id']   = $user->id;
-            $input['created_at']    = now()->timestamp;
+            $input['karyawan_id'] = $user->id;
+            $input['created_at'] = now()->timestamp;
 
-            $id = Timesheet::insertGetId($input);
-            $timesheet = Timesheet::find($id);
-
-            // Remove ID
-            unset($timesheet->id);
+            Timesheet::insert($input);
 
             $responseOutput['success'] = true;
-            $responseOutput['message'] = 'Success! The timesheet has been created. However, you need to wait for approval from the client';
-            $responseOutput['data'] = $timesheet;
+            $responseOutput['message'] = trans('response.success.post_timesheet');
+            $responseOutput['time_at'] = now()->diffForHumans();
 
             DB::commit();
 
@@ -69,7 +75,7 @@ class TimesheetController extends Controller
                 unset($timesheet->id);
 
                 $responseOutput['success'] = true;
-                $responseOutput['message'] = 'Update Successful! The timesheet has been approved by HR.';
+                $responseOutput['message'] = trans('response.success.post_approve', ['name' => $user_type->type]);
                 $responseOutput['data'] = $timesheet;
 
                 DB::commit();
@@ -98,9 +104,18 @@ class TimesheetController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            $responseOutput['success']  = true;
-            $responseOutput['message']  = 'Great! Your timesheet has been successfully loaded.';
-            $responseOutput['data']     = $timesheet;
+            $store_timesheet = false;
+            if($timesheet->count() > 0) {
+                $firstTimestamp = $timesheet->first()->created_at;
+                $store_timesheet = Helper::unixTimeToDate($firstTimestamp) == Helper::unixTimeToDate($nowTimestamp);
+            }
+
+            $responseOutput['success'] = true;
+            $responseOutput['message'] = trans('response.success.get_timesheet');
+            $responseOutput['data'] = [
+                'store_timesheet' => $store_timesheet,
+                'items' => $timesheet
+            ];
 
             return response()->json($responseOutput);
         } catch(\Exception $e) {

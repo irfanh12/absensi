@@ -12,6 +12,9 @@ import BaseBlock from "@/components/BaseBlock.vue";
 import BaseBackground from "@/components/BaseBackground.vue";
 import BasePageHeading from "@/components/BasePageHeading.vue";
 
+// Vue Paginate
+import Paginate from "vuejs-paginate-next";
+
 // Template directives
 import clickRipple from "@/directives/clickRipple";
 
@@ -38,6 +41,7 @@ const app = createApp(App);
 app.component("BaseBlock", BaseBlock);
 app.component("BaseBackground", BaseBackground);
 app.component("BasePageHeading", BasePageHeading);
+app.component("paginate", Paginate);
 
 // Register global directives
 app.directive("click-ripple", clickRipple);

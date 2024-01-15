@@ -22,7 +22,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $responseOutput = $this->responseOutput;
-        $responseOutput['message'] = 'Login failed. Please check email and password.';
+        $responseOutput['message'] = trans('response.error.login_failed');
 
         // validate incoming request
         $validator = Validator::make($request->all(), [
@@ -47,16 +47,17 @@ class AuthController extends Controller
 
             //output
             $responseOutput['success'] = true;
-            $responseOutput['message'] = 'Logged in.';
+            $responseOutput['message'] = trans('response.success.auth_success');
 
             $user->tokens()->delete();
 
             $user_type = $user->karyawan->user_type;
-            $user_type = Str::snake($user_type->type);
+            $position = $user_type->type;
 
-            $token = $user->createToken('PresensiToken', $this->enumType($user_type))->plainTextToken;
+            $token = $user->createToken('PresensiToken', $this->enumType(Str::snake($position)))->plainTextToken;
             $responseOutput['data'] = [
                 'token' => $token,
+                'position' => $position,
                 'user_details' => $user_details,
             ];
 
@@ -73,7 +74,7 @@ class AuthController extends Controller
         $user = Auth::user();
         if($user) {
             $responseOutput['success'] = true;
-            $responseOutput['message'] = 'Success';
+            $responseOutput['message'] = trans('response.success.auth_success');
         }
 
         return response()->json($responseOutput);

@@ -1,3 +1,4 @@
+import { getActivePinia } from "pinia"
 export const baseUrl = import.meta.env.VITE_APP_CORE_API_URL;
 
 let videoStream;
@@ -156,6 +157,8 @@ export default async function checkSession(token) {
   } catch (error) {
     if(error.response) {
       localStorage.clear();
+      // map through that list and use the **$reset** fn to reset the state
+      getActivePinia()._s.forEach(store => store.$reset());
       alert(error.response.data.error.message);
     } else {
       alert(error);

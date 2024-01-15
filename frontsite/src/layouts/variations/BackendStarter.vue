@@ -10,6 +10,7 @@ const store = useTemplateStore();
 
 // Auth store
 const auth = useAuth();
+const permissions = auth.permissions()
 
 // Set default elements for this layout
 store.setLayout({
@@ -45,6 +46,28 @@ store.mainContent({ mode: "narrow" });
               name: 'Dashboard',
               to: 'dashboard',
               icon: 'si si-speedometer',
+            },
+            {
+              name: 'Menus',
+              heading: true,
+            },
+            {
+              name: 'Klien',
+              to: 'klien-index',
+              icon: 'fa fa-user-tie',
+              permissions: permissions.klien.includes(auth.position)
+            },
+            {
+              name: 'Karyawan',
+              to: 'karyawan-index',
+              icon: 'fa fa-users',
+              permissions: permissions.karyawan.includes(auth.position)
+            },
+            {
+              name: 'Timesheet',
+              to: 'timesheet-index',
+              icon: 'fa fa-sheet-plastic',
+              permissions: permissions.timesheet.includes(auth.position)
             },
             {
               name: 'Action',

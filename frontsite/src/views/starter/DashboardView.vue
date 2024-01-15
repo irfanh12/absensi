@@ -1,52 +1,52 @@
 <script setup>
 // Vue Packages
-import { onMounted, reactive, ref } from "vue";
-import { useRouter } from "vue-router";
+import { onMounted, reactive, ref } from "vue"
+import { useRouter } from "vue-router"
 
-import SimpleBar from "simplebar";
-import { useAuth } from "@/stores/auth";
+import SimpleBar from "simplebar"
+import { useAuth } from "@/stores/auth"
 
 // Router
-const router = useRouter();
+const router = useRouter()
 
 // Utils
-import { startCamera, stopCamera, captureSnapshot, justNowDate } from "@/stores/utils";
+import { startCamera, stopCamera, captureSnapshot, justNowDate } from "@/stores/utils"
 
 // Refs
-const formcontrolCamera = ref(null);
-const formcontrolMaps = ref(null);
-const formcontrolResult = ref(null);
+const formcontrolCamera = ref(null)
+const formcontrolMaps = ref(null)
+const formcontrolResult = ref(null)
 
-const presensiEmployee = ref(null);
-const timesheetEmployee = ref(null);
+const presensiEmployee = ref(null)
+const timesheetEmployee = ref(null)
 
-const toast2 = ref(null);
+const toast2 = ref(null)
 
 // Auth store
-const auth = useAuth();
-const permissions = auth.permissions();
+const auth = useAuth()
+const permissions = auth.permissions()
 
 // Now Date
-const nowDate = moment().format("ddd, DD MMM YYYY");
-const nowDateWithOutYear = moment().format("ddd, DD MMM");
+const nowDate = moment().format("ddd, DD MMM YYYY")
+const nowDateWithOutYear = moment().format("ddd, DD MMM")
 
 // Differential Date
-const currentDate = new Date();
-const dayOfWeek = currentDate.getDay();
+const currentDate = new Date()
+const dayOfWeek = currentDate.getDay()
 
 let shift = {
   worktime: "-",
   label: "Shift OFF"
-};
+}
 
 if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-  shift.label = "Office Hour";
-  shift.worktime = "09:00 - 18:00";
+  shift.label = "Office Hour"
+  shift.worktime = "09:00 - 18:00"
 }
 
 // User Details
-let user = localStorage.getItem("user");
-user = JSON.parse(user);
+let user = localStorage.getItem("user")
+user = JSON.parse(user)
 
 // Data Reactive
 let data = reactive({
@@ -59,10 +59,10 @@ let data = reactive({
     lng: null,
   },
   time: "",
-});
+})
 
 let timesheet = reactive({
-  lists: [],
+  store_timesheet: false,
   data: {
     remarks: "",
   }
@@ -70,21 +70,21 @@ let timesheet = reactive({
 
 // toastMessage Reactive
 let toastNotif = reactive({
-  date: moment(),
+  date: '',
   message: '',
 })
 
 onMounted(() => {
   // Load Data
 
-  let videoElement = document.getElementById('cameraPreview');
+  let videoElement = document.getElementById('cameraPreview')
   // SimpleBar
-  new SimpleBar(document.getElementById("timesheet"));
+  new SimpleBar(document.getElementById("timesheet"))
   
   // Modals
-  const myModal = document.getElementById('modal-block-popout');
-  const myModalDirection = document.getElementById('modal-block-direction');
-  const myModalResult = document.getElementById('modal-block-result');
+  const myModal = document.getElementById('modal-block-popout')
+  const myModalDirection = document.getElementById('modal-block-direction')
+  const myModalResult = document.getElementById('modal-block-result')
 
   // Event Listener
   myModal.addEventListener('shown.bs.modal', () => {
@@ -96,31 +96,31 @@ onMounted(() => {
 
     // Open New Modal
     const theModal = new bootstrap.Modal(myModalDirection)
-    theModal.show();
+    theModal.show()
   })
 
 
   myModalDirection.addEventListener('shown.bs.modal', async () => {
     try {
-      const pos = await getCurrentPosition();
-      const { latitude, longitude } = pos.coords;
+      const pos = await getCurrentPosition()
+      const { latitude, longitude } = pos.coords
 
-      formcontrolMaps.value.statusLoading();
+      formcontrolMaps.value.statusLoading()
 
-      data.map_direction.lat = latitude;
-      data.map_direction.lng = longitude;
+      data.map_direction.lat = latitude
+      data.map_direction.lng = longitude
       
       new google.maps.Map(document.getElementById("map"), {
         center: { lat: latitude, lng: longitude },
         zoom: 12,
-      });
+      })
 
       setTimeout(() => {
-        formcontrolMaps.value.statusNormal();
-      }, 1000);
+        formcontrolMaps.value.statusNormal()
+      }, 1000)
     } catch (error) {
       // Handle any errors that occur
-      console.error(error);
+      console.error(error)
     }
   })
 
@@ -129,20 +129,20 @@ onMounted(() => {
 
     // Open New Modal
     const theModal = new bootstrap.Modal(myModalResult)
-    theModal.show();
+    theModal.show()
   })
 
   myModalResult.addEventListener('shown.bs.modal', () => {
-    formcontrolResult.value.statusLoading();
+    formcontrolResult.value.statusLoading()
 
     new google.maps.Map(document.getElementById("mapResult"), {
       center: { lat: data.map_direction.lat, lng: data.map_direction.lng },
       zoom: 12,
-    });
+    })
 
     setTimeout(() => {
-      formcontrolResult.value.statusNormal();
-    }, 500);
+      formcontrolResult.value.statusNormal()
+    }, 500)
   })
 
   myModalResult.addEventListener('hidden.bs.modal', () => {
@@ -150,16 +150,16 @@ onMounted(() => {
     document.getElementById('mapResult').innerHTML
   })
 
-  const toastElement = document.getElementById("toast-example-2");
-  toast2.value = new window.bootstrap.Toast(toastElement);
+  const toastElement = document.getElementById("toast-example-2")
+  toast2.value = new window.bootstrap.Toast(toastElement)
 
-  getPresensiEmployee();
-  getTimesheetEmployee();
+  getPresensiEmployee()
+  getTimesheetEmployee()
 })
 
 function takeaction() {
-  let videoElement = document.getElementById('cameraPreview');
-  data.photo = captureSnapshot(videoElement);
+  let videoElement = document.getElementById('cameraPreview')
+  data.photo = captureSnapshot(videoElement)
 }
 
 function takedirection() {
@@ -168,8 +168,12 @@ function takedirection() {
 
 function getCurrentPosition() {
   return new Promise((resolve, reject) => {
-    navigator.geolocation.getCurrentPosition(resolve, reject);
-  });
+    navigator.geolocation.getCurrentPosition(resolve, reject)
+  })
+}
+
+function timesheetDateFormat(created_at) {
+  return moment.unix(created_at).format('ddd, D MMM - hh:mm');
 }
 
 async function getTimesheetEmployee() {
@@ -177,16 +181,17 @@ async function getTimesheetEmployee() {
 
   try {
     const dateNowTrim = moment().format("YYYYMMDD")
-    const response = await axios.get(`api/v1/timesheet/employee`);
-    const respData = response.data;
+    const response = await axios.get(`api/v1/timesheet/employee`)
+    const respData = response.data
 
     if(respData.success) {
       timesheetEmployee.value.statusNormal()
-  
-      auth.setTimesheet(respData.data);
+
+      timesheet.store_timesheet = respData.data.store_timesheet
+      auth.setTimesheet(respData.data.items)
     }
   } catch (error) {
-    console.error(error);
+    console.error(error)
   }
 }
 
@@ -195,26 +200,27 @@ async function getPresensiEmployee() {
 
   try {
     const dateNowTrim = moment().format("YYYYMMDD")
-    const response = await axios.get(`api/v1/shift/presensi/employee/${dateNowTrim}`);
-    const respData = response.data;
+    const response = await axios.get(`api/v1/shift/presensi/employee/${dateNowTrim}`)
+    const respData = response.data
 
     if(respData.success) {
       presensiEmployee.value.statusNormal()
   
-      const { start_time, end_time } = respData.data;
-      auth.setPresensi(start_time, end_time);
+      const { start_time, end_time } = respData.data
+      auth.setPresensi(start_time, end_time)
     }
   } catch (error) {
-    console.error(error);
+    console.error(error)
   }
 }
 
 async function storePresensiEmployee() {
   try {    
     const dateNowTrim = moment().format("YYYYMMDD")
-    const response = await axios.post(`api/v1/shift/presensi/employee/${dateNowTrim}`, data);
+    const response = await axios.post(`api/v1/shift/presensi/employee/${dateNowTrim}`, data)
     const respData = response.data
 
+    toastNotif.date = respData.time_at
     toastNotif.message = respData.message
 
     data = {
@@ -230,38 +236,41 @@ async function storePresensiEmployee() {
     }
 
     // Open Toast
-    const toastElement = document.getElementById("toast-example-2");
-    const toastInstance = bootstrap.Toast.getOrCreateInstance(toastElement);
-    toastInstance.show();
+    const toastElement = document.getElementById("toast-example-2")
+    const toastInstance = bootstrap.Toast.getOrCreateInstance(toastElement)
+    toastInstance.show()
 
     // Load Data Presensi Again
     getPresensiEmployee()
   } catch (error) {
     // Handle any errors that occur
-    console.error(error);
+    console.error(error)
   }
 }
 
 async function storeTimesheet() {
   try {
-    const response = await axios.post(`api/v1/timesheet/store`, timesheet.data);
-    const respData = response.data;
+    const response = await axios.post(`api/v1/timesheet/store`, timesheet.data)
+    const respData = response.data
 
-    toastNotif.message = respData.message;
+    toastNotif.date = respData.time_at
+    toastNotif.message = respData.message
 
-    const modalElement = document.getElementById("modal-block-timesheet");
-    const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
+    const modalElement = document.getElementById("modal-block-timesheet")
+    const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement)
     modalInstance.hide()
 
     if (!modalInstance._isShown) {
-      timesheet.data.remarks = "";
+      timesheet.data.remarks = ""
 
-      const toastElement = document.getElementById("toast-example-2");
-      const toastInstance = bootstrap.Toast.getOrCreateInstance(toastElement);
-      toastInstance.show();
+      const toastElement = document.getElementById("toast-example-2")
+      const toastInstance = bootstrap.Toast.getOrCreateInstance(toastElement)
+      toastInstance.show()
+
+      getTimesheetEmployee()
     }
   } catch (error) {
-    console.error(error);
+    console.error(error)
   }
 }
 </script>
@@ -272,7 +281,7 @@ async function storeTimesheet() {
 }
 
 .capture {
-  position: relative; 
+  position: relative;
   display: flex;
   justify-content: center;
   padding: 1.25rem 1.25rem;
@@ -422,7 +431,7 @@ async function storeTimesheet() {
             <div class="fs-sm push" v-for="timesheet in auth.timesheets" :key="timesheet">
               <div class="d-flex justify-content-between mb-2">
                 <div class="space-x-1 w-100 d-flex justify-content-between align-items-center">
-                  <span class="fw-semibold text-gray-lighter">{{ nowDateWithOutYear }}</span>
+                  <span class="fw-semibold text-gray-lighter">{{ timesheetDateFormat(timesheet.created_at) }}</span>
                   <span class="badge rounded-pill text-bg-primary" :class="timesheet.status.class">{{ timesheet.status.label }}</span>
                 </div>
                 <!-- <div class="text-warning">
@@ -436,159 +445,13 @@ async function storeTimesheet() {
               <p class="mb-0 text-gray">{{ timesheet.remarks }}</p>
             </div>
             <div class="text-center push w-100">
-              <button type="button" class="btn btn-sm btn-info w-100" data-bs-toggle="modal" data-bs-target="#modal-block-timesheet">
+              <button v-show="!timesheet.store_timesheet" type="button" class="btn btn-sm btn-info w-100" data-bs-toggle="modal" data-bs-target="#modal-block-timesheet">
                 Add Timesheet
               </button>
             </div>
           </BaseBlock>
           <!-- END Ratings -->
-
-          <!-- Ratings -->
-          <BaseBlock>
-            <template #title>
-              <i class="si si-info text-muted me-1"></i> Notifications
-            </template>
-
-            <!-- <div class="fs-sm push">
-              <div class="d-flex justify-content-between mb-2">
-                <div class="space-x-1">
-                  <a class="fw-semibold" href="">Alice Moore</a>
-                  <span class="text-muted">(5/5)</span>
-                </div>
-                <div class="text-warning">
-                  <i class="fa fa-star"></i>
-                  <i class="fa fa-star"></i>
-                  <i class="fa fa-star"></i>
-                  <i class="fa fa-star"></i>
-                  <i class="fa fa-star"></i>
-                </div>
-              </div>
-              <p class="mb-0">
-                Flawless design execution! I'm really impressed with the product,
-                it really helped me build my app so fast! Thank you!
-              </p>
-            </div>
-            <div class="fs-sm push">
-              <div class="d-flex justify-content-between mb-2">
-                <div class="space-x-1">
-                  <a class="fw-semibold" href="">Danielle Jones</a>
-                  <span class="text-muted">(5/5)</span>
-                </div>
-                <div class="text-warning">
-                  <i class="fa fa-star"></i>
-                  <i class="fa fa-star"></i>
-                  <i class="fa fa-star"></i>
-                  <i class="fa fa-star"></i>
-                  <i class="fa fa-star"></i>
-                </div>
-              </div>
-              <p class="mb-0">
-                Great value for money and awesome support! Would buy again and
-                again! Thanks!
-              </p>
-            </div>
-            <div class="fs-sm push">
-              <div class="d-flex justify-content-between mb-2">
-                <div class="space-x-1">
-                  <a class="fw-semibold" href="">Ryan Flores</a>
-                  <span class="text-muted">(5/5)</span>
-                </div>
-                <div class="text-warning">
-                  <i class="fa fa-star"></i>
-                  <i class="fa fa-star"></i>
-                  <i class="fa fa-star"></i>
-                  <i class="fa fa-star"></i>
-                  <i class="fa fa-star"></i>
-                </div>
-              </div>
-              <p class="mb-0">
-                Working great in all my devices, quality and quantity in a great
-                package! Thank you!
-              </p>
-            </div> -->
-            <div class="text-center push">
-              <button type="button" class="btn btn-sm btn-alt-secondary">
-                TBD
-              </button>
-            </div>
-          </BaseBlock>
-          <!-- END Ratings -->
-
-          <!-- Followers -->
-          <BaseBlock>
-            <template #title>
-              <i class="fa fa-share-alt text-muted me-1"></i> Feature 2
-            </template>
-
-            <!-- <ul class="nav-items fs-sm">
-              <li>
-                <a class="d-flex py-2" href="javascript:void(0)">
-                  <div
-                    class="flex-shrink-0 me-3 ms-2 overlay-container overlay-bottom"
-                  >
-                    <img
-                      class="img-avatar img-avatar48"
-                      src="/assets/media/avatars/avatar6.jpg"
-                      alt=""
-                    />
-                    <span
-                      class="overlay-item item item-tiny item-circle border border-2 border-white bg-success"
-                    ></span>
-                  </div>
-                  <div class="flex-grow-1">
-                    <div class="fw-semibold">Laura Carr</div>
-                    <div class="fw-normal text-muted">Copywriter</div>
-                  </div>
-                </a>
-              </li>
-              <li>
-                <a class="d-flex py-2" href="javascript:void(0)">
-                  <div
-                    class="flex-shrink-0 me-3 ms-2 overlay-container overlay-bottom"
-                  >
-                    <img
-                      class="img-avatar img-avatar48"
-                      src="/assets/media/avatars/avatar11.jpg"
-                      alt=""
-                    />
-                    <span
-                      class="overlay-item item item-tiny item-circle border border-2 border-white bg-success"
-                    ></span>
-                  </div>
-                  <div class="flex-grow-1">
-                    <div class="fw-semibold">Ryan Flores</div>
-                    <div class="fw-normal text-muted">Web Developer</div>
-                  </div>
-                </a>
-              </li>
-              <li>
-                <a class="d-flex py-2" href="javascript:void(0)">
-                  <div
-                    class="flex-shrink-0 me-3 ms-2 overlay-container overlay-bottom"
-                  >
-                    <img
-                      class="img-avatar img-avatar48"
-                      src="/assets/media/avatars/avatar3.jpg"
-                      alt=""
-                    />
-                    <span
-                      class="overlay-item item item-tiny item-circle border border-2 border-white bg-warning"
-                    ></span>
-                  </div>
-                  <div class="flex-grow-1">
-                    <div class="fw-semibold">Marie Duncan</div>
-                    <div class="fw-normal text-muted">Web Designer</div>
-                  </div>
-                </a>
-              </li>
-            </ul> -->
-            <div class="text-center push">
-              <button type="button" class="btn btn-sm btn-alt-secondary">
-                TBD
-              </button>
-            </div>
-          </BaseBlock>
-          <!-- END Followers -->
+          
         </div>
       </div>
     </div>
@@ -656,7 +519,7 @@ async function storeTimesheet() {
 
             <template #content>
               <div class="block-content fs-sm">
-                <div id="map" style="height: 400px;"></div>
+                <div id="map" style="height: 400px"></div>
               </div>
               <div class="block-content block-content-full text-end bg-body d-flex justify-content-center">
                 <button
@@ -692,7 +555,7 @@ async function storeTimesheet() {
             <template #content>
               <div class="result block-content fs-sm">
                 <div class="card">
-                  <div id="mapResult" style="height: 250px;" class="card-img-top"></div>
+                  <div id="mapResult" style="height: 250px" class="card-img-top"></div>
                   <div class="card-body">
                     <p class="card-text">
                       <div class="d-flex flex-column">
@@ -734,7 +597,6 @@ async function storeTimesheet() {
       role="dialog"
       aria-labelledby="modal-block-timesheet"
       aria-hidden="true"
-      data-bs-backdrop="static"
       data-bs-keyboard="false"
     >
       <div class="modal-dialog modal-dialog-popout modal-dialog-centered" role="document">
@@ -785,7 +647,7 @@ async function storeTimesheet() {
         <div class="toast-header">
           <i class="si si-wrench text-dark me-2"></i>
           <strong class="me-auto">System</strong>
-          <small class="text-muted">{{ justNowDate(toastNotif.date) }}</small>
+          <small class="text-muted">{{ toastNotif.date }}</small>
           <button
             type="button"
             class="btn-close"

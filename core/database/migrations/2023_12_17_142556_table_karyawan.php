@@ -23,7 +23,7 @@ return new class extends Migration
             $table->date('birthdate')->nullable();
             $table->enum('gender', ['male', 'female'])->nullable();
             $table->text('address')->nullable();
-            $table->decimal('salary', 10, 2)->default(0.00);
+            $table->decimal('salary', 10, 2)->nullable()->default(0.00);
             $table->unsignedBigInteger('created_at');
             $table->unsignedBigInteger('updated_at')->nullable();
             // $table->timestamps();
