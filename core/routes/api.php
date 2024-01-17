@@ -41,6 +41,7 @@ Route::prefix('v1')->group(function () {
     Route::controller(KaryawanController::class)->group(function () {
         Route::prefix('employee')->group(function () {
             Route::get('lists', 'lists')->middleware(['auth:sanctum']);
+            Route::get('get-list-clients', 'getListClients')->middleware(['auth:sanctum']);
 
             Route::post('store', 'store')->middleware(['auth:sanctum']);
             Route::put('{id}/update', 'update')->middleware(['auth:sanctum']);

@@ -35,6 +35,18 @@ export async function loadKaryawan(reactive, ref) {
   }
 }
 
+export async function getListClients() {
+  try {
+    const response = await axios.get(`api/v1/employee/get-list-clients`);
+
+    return response.data;
+  } catch (error) {
+    // Log or handle the error in a more informative way
+    console.error('Error validating :', error);
+    return false;
+  }
+}
+
 export async function storeKaryawan(reactive) {
   try {
     const payload = { ...reactive };

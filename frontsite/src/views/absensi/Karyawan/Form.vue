@@ -11,12 +11,11 @@ const router = useRouter();
 let form = reactive({
   email: "",
   password: "",
-  user_type_id: 4,
+  type_id: 4,
   nama: "",
   address: "",
   perusahaan_id: "e2d43ef5-cc0c-4ebe-bdb0-f66dbb230d51",
   identify_id: "",
-  type_id: "",
   position: "",
   first_name: "",
   last_name: "",
@@ -27,7 +26,13 @@ let form = reactive({
   salary: "",
 })
 
+let clients = reactive({
+  data: [],
+});
+
 onMounted(() => {
+  getListClients(clients);
+
   form.id = route.params.id ?? "";
   if(form.id) {
     loadDataForm(form, karyawan);
@@ -36,10 +41,32 @@ onMounted(() => {
 
 function mappingForm(form, data) {
   form.id = data.id
+  form.email = data.email
+  form.password = data.password
   form.nama = data.nama
-  form.email = data.user.email
   form.address = data.address
-  form.code = data.code
+  form.perusahaan_id = data.perusahaan_id
+  form.identify_id = data.identify_id
+  form.position = data.position
+  form.first_name = data.first_name
+  form.last_name = data.last_name
+  form.phone_number = data.phone_number
+  form.birthdate = data.birthdate
+  form.gender = data.gender
+  form.address = data.address
+  form.salary = data.salary
+}
+
+async function getListClients(clients) {
+  try {
+    const respData = await KaryawanController.getListClients();
+    
+    if (respData.success) {
+      clients.data = respData.data;
+    }
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 async function loadDataForm(form, karyawan) {
@@ -70,7 +97,7 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="content">
+  <div class="content mb-4">
     <BaseBlock ref="karyawan" title="Form Karyawan" class="mb-0">
       <form @submit.prevent="onSubmit">
 
@@ -78,27 +105,37 @@ async function onSubmit() {
           <label class="form-label" for="example-select">Status Karyawan</label>
           <div class="form-check">
             <input
-              v-model="form.user_type_id"
+              v-model="form.type_id"
               class="form-check-input"
               type="radio"
               id="example-radios-default1"
-              name="user_type_id"
+              name="type_id"
               value="4"
               checked />
             <label class="form-check-label" for="example-radios-default1">Internal</label>
           </div>
           <div class="form-check">
             <input
-              v-model="form.user_type_id"
+              v-model="form.type_id"
               class="form-check-input"
               type="radio"
               id="example-radios-default2"
-              name="user_type_id"
+              name="type_id"
               value="5" />
             <label class="form-check-label" for="example-radios-default2">Outsource</label>
           </div>
         </div>
         
+        <div class="mb-4" v-show="form.type_id === '5'">
+          <label class="form-label" for="email">
+            Klien
+          </label>
+          <select class="form-select" id="example-select" name="example-select">
+            <option selected>Pilih Klien</option>
+            <option value="1"></option>
+          </select>
+        </div>
+
         <div class="mb-4">
           <label class="form-label" for="email">
             Email <span class="text-danger">*</span>
@@ -138,7 +175,7 @@ async function onSubmit() {
 
         <div class="mb-4">
           <label class="form-label" for="birthdate">
-            Phone Number <span class="text-danger">*</span>
+            Birthdate <span class="text-danger">*</span>
           </label>
           <input required type="date" class="form-control" id="birthdate" name="birthdate" v-model="form.birthdate"/>
         </div>

@@ -3,6 +3,7 @@
 return [
 
     'success' => [
+        'get_klien' => 'Clients has been successfully add into list.',
         'get_timesheet' => 'Great! Your timesheet has been successfully loaded.',
         'post_karyawan' => 'Success, .',
         'post_presensi' => 'Success, your attendance has been saved.',

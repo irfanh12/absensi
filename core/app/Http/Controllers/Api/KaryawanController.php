@@ -153,7 +153,7 @@ class KaryawanController extends Controller
         }
     }
 
-    public function delete(Request $request, $uuid) {
+    public function destroy(Request $request, $uuid) {
         $responseOutput = $this->responseOutput;
 
         $input = $request->all();
@@ -207,6 +207,22 @@ class KaryawanController extends Controller
             return response()->json($responseOutput);
         } catch(\Exception $e) {
             DB::rollback();
+            abort(500, $e->getMessage());
+        }
+    }
+
+    public function getListClients(Request $request) {
+        $responseOutput = $this->responseOutput;
+
+        try {
+            $klien = Karyawan::where('type_id', 2);
+
+            $responseOutput['success'] = true;
+            $responseOutput['message'] = trans('response.success.get_klien');
+            $responseOutput['data'] = $klien;
+
+            return response()->json($responseOutput);
+        } catch(\Exception $e) {
             abort(500, $e->getMessage());
         }
     }

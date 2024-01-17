@@ -1,21 +1,20 @@
 <script setup>
 import { onMounted, reactive, ref } from "vue";
-import * as OwnerController from "@/controllers/Owner";
+import * as KlienController from "@/controllers/Klien";
 
-const owner = ref(null)
+const klien = ref(null)
 
 let table = reactive({
-  items: {
-    lists: [],
-    total: 0,
-    page: 1,
-    per_page: 15,
-    last_page: 0,
-  }
+  lists: [],
+  total: 0,
+  page: 1,
+  per_page: 15,
+  last_page: 0,
+  type_id: 2
 })
 
 onMounted(() => {
-  loadDataAndUpdateTable(table, owner);
+  loadDataAndUpdateTable(table, klien);
 });
 
 /**
@@ -26,22 +25,22 @@ onMounted(() => {
  * @return {void}
  */
 function updateTableItems(table, data) {
-  table.items.lists = data.data;
-  table.items.total = data.total;
-  table.items.page = data.current_page;
-  table.items.per_page = data.per_page;
-  table.items.last_page = data.last_page;
+  table.lists = data.data;
+  table.total = data.total;
+  table.page = data.current_page;
+  table.per_page = data.per_page;
+  table.last_page = data.last_page;
 }
 
 /**
- * Loads data from the owner and updates the table.
+ * Loads data from the klien and updates the table.
  *
  * @param {string} table - The table to update.
- * @param {object} owner - The owner object.
+ * @param {object} klien - The klien object.
  * @return {Promise} A promise that resolves when the data is loaded and the table is updated.
  */
-function loadDataAndUpdateTable(table, owner) {
-  return OwnerController.loadData(table, owner)
+function loadDataAndUpdateTable(table, klien) {
+  return KlienController.loadData(table, klien)
     .then(respData => {
       const { success, data } = respData;
       
@@ -63,24 +62,24 @@ function loadDataAndUpdateTable(table, owner) {
 function paginateClick(pageNumber) {
   console.log("Pagination Click clicked");
 
-  table.items.page = pageNumber;
-  loadDataAndUpdateTable(table, owner);
+  table.page = pageNumber;
+  loadDataAndUpdateTable(table, klien);
 }
 </script>
 
 <template>
   <div class="content">
-    <BaseBlock ref="owner" title="Owner" class="mb-0">
+    <BaseBlock ref="klien" title="Klien" class="mb-0">
       <template #options>
-        <RouterLink :to="{ name: 'owner-form' }" class="btn btn-sm btn-primary">
-          <i class="fa fa-user-plus"></i> Create Owner
+        <RouterLink :to="{ name: 'klien-form' }" class="btn btn-sm btn-primary">
+          <i class="fa fa-user-plus"></i> Create Klien
         </RouterLink>
       </template>
       
       <table class="table table-hover table-bordered">
         <thead>
           <tr>
-            <th class="table-active" style="width: 200px;">Owner Name</th>
+            <th class="table-active" style="width: 200px;">Klien Name</th>
             <th class="table-active">Email</th>
             <th class="table-active">Address</th>
             <th class="table-active">Code</th>
@@ -90,19 +89,19 @@ function paginateClick(pageNumber) {
           </tr>
         </thead>
         <tbody>
-          <tr v-show="table.items.lists.length === 0">
+          <tr v-show="table.lists.length === 0">
             <td class="text-center" colspan="5">
               No records found.
             </td>
           </tr>
-          <tr v-for="item in table.items.lists" :key="item.id">
+          <tr v-for="item in table.lists" :key="item.id">
             <td>{{ item.nama }}</td>
             <td>{{ item.user.email }}</td>
             <td>{{ item.address }}</td>
             <td>{{ item.code }}</td>
             <td class="text-center">
               <div class="d-flex gap-2 justify-content-center align-items-center">
-                <router-link :to="{ name: 'owner-form', params: { id: item.id } }">
+                <router-link :to="{ name: 'klien-form', params: { id: item.id } }">
                   <button type="button" class="btn btn-sm btn-primary">
                     Edit
                   </button>
@@ -117,7 +116,7 @@ function paginateClick(pageNumber) {
           </tr>
         </tbody>
       </table>
-      <paginate v-show="table.items.lists.length > 0" :page-count="table.items.last_page" :click-handler="paginateClick">
+      <paginate v-show="table.lists.length > 0" :page-count="table.last_page" :click-handler="paginateClick">
       </paginate>
     </BaseBlock>
   </div>

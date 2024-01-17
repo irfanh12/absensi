@@ -9,43 +9,58 @@ const route = useRoute();
 const router = useRouter();
 
 let form = reactive({
-  identify_id: '',
-  perusahaan_id: '',
-  type_id: 0,
-  first_name: '',
-  last_name: '',
-  email: '',
-  password: '',
-  position: 'Klien',
-  phone_number: '',
-  birthdate: '',
-  gender: 'L',
-  address: '',
-  salary: 0,
+  email: "",
+  password: "",
+  type_id: 2,
+  nama: "",
+  address: "",
+  perusahaan_id: "",
+  identify_id: "",
+  position: "",
+  first_name: "",
+  last_name: "",
+  phone_number: "",
+  birthdate: "",
+  gender: "",
+  address: "",
+  salary: "",
 })
 
 onMounted(() => {
-  form.uuid = route.params.id ?? "";
-  if(form.uuid) {
+  form.id = route.params.id ?? "";
+  if(form.id) {
     loadDataForm(form, klien);
   }
 });
 
 function mappingForm(form, data) {
   form.id = data.id
-  form.identify_id = data.identify_id
-  form.perusahaan_id = data.perusahaan_id
-  form.type_id = data.type_id
-  form.first_name = data.first_name
-  form.last_name = data.last_name
   form.email = data.email
   form.password = data.password
+  form.nama = data.nama
+  form.address = data.address
+  form.perusahaan_id = data.perusahaan_id
+  form.identify_id = data.identify_id
   form.position = data.position
+  form.first_name = data.first_name
+  form.last_name = data.last_name
   form.phone_number = data.phone_number
   form.birthdate = data.birthdate
   form.gender = data.gender
   form.address = data.address
   form.salary = data.salary
+}
+
+async function getListClients(clients) {
+  try {
+    const respData = await KlienController.getListClients();
+    
+    if (respData.success) {
+      clients.data = respData.data;
+    }
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 async function loadDataForm(form, klien) {
@@ -63,16 +78,11 @@ async function loadDataForm(form, klien) {
 async function onSubmit() {
   klien.value.statusLoading()
   try {
-    const { success, data } = await KlienController.onSubmit(form);
+    const { success, data } = await KlienController.storeKlien(form);
     console.log(success, data)
     if (success) {
-      form.uuid = data.id;
-      const { success } = await KlienController.storeKlien(form);
-      
-      if (success) {
-        klien.value.statusNormal()
-        router.push({ name: "klien-index" });
-      }
+      klien.value.statusNormal()
+      router.push({ name: "klien-index" });
     }
   } catch (error) {
     console.error(error);
@@ -81,7 +91,7 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="content">
+  <div class="content mb-4">
     <BaseBlock ref="klien" title="Form Klien" class="mb-0">
       <form @submit.prevent="onSubmit">
 
@@ -99,18 +109,34 @@ async function onSubmit() {
           <input required type="password" class="form-control" id="password" name="password" v-model="form.password"/>
         </div>
 
-        <div class="mb-4">
-          <label class="form-label" for="nama">
-            Name <span class="text-danger">*</span>
-          </label>
-          <input required type="text" class="form-control" id="nama" name="nama" v-model="form.nama"/>
+        <div class="row mb-4">
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="first_name">
+              First Name <span class="text-danger">*</span>
+            </label>
+            <input required type="text" class="form-control" id="first_name" name="first_name" v-model="form.first_name"/>
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="last_name">
+              Last Name <span class="text-danger">*</span>
+            </label>
+            <input required type="text" class="form-control" id="last_name" name="last_name" v-model="form.last_name"/>
+          </div>
         </div>
 
         <div class="mb-4">
-          <label class="form-label" for="code">
-            Code <span class="text-danger">*</span>
+          <label class="form-label" for="phone_number">
+            Phone Number <span class="text-danger">*</span>
           </label>
-          <input required type="text" class="form-control" id="code" name="code" v-model="form.code"/>
+          <input required type="tel" class="form-control" id="phone_number" name="phone_number" v-model="form.phone_number"/>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label" for="birthdate">
+            Birthdate <span class="text-danger">*</span>
+          </label>
+          <input required type="date" class="form-control" id="birthdate" name="birthdate" v-model="form.birthdate"/>
         </div>
 
         <div class="mb-4">
