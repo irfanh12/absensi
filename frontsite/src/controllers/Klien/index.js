@@ -2,7 +2,7 @@ export async function loadData(reactive, ref) {
   ref.value.statusLoading()
 
   try {
-    const response = await axios.get('api/v1/employee/lists', {
+    const response = await axios.get('api/v1/client/lists', {
       params: {
         page: reactive.page,
         per_page: reactive.per_page,
@@ -20,11 +20,11 @@ export async function loadData(reactive, ref) {
   }
 }
 
-export async function loadEmployee(reactive, ref) {
+export async function loadKlien(reactive, ref) {
   ref.value.statusLoading()
 
   try {
-    const response = await axios.get(`api/v1/employee/edit/${reactive.uuid}`);
+    const response = await axios.get(`api/v1/client/edit/${reactive.id}`);
 
     ref.value.statusNormal()
     return response.data;
@@ -35,36 +35,19 @@ export async function loadEmployee(reactive, ref) {
   }
 }
 
-export async function onSubmit(reactive) {
+export async function storeKlien(reactive) {
+	try {
+		const payload = { ...reactive };
+		const id = payload.klien.id;
 
-  try {
-    const response = await axios.post(`api/v1/auth/register`, {
-      email: reactive.email,
-      password: reactive.password,
-      user_type_id: reactive.user_type_id,
-    });
-    
-    return response.data;
-  } catch (error) {
-    // Log or handle the error in a more informative way
-    console.error('Error validating :', error);
-    return false;
-  }
-}
-
-export async function storeOwner(reactive) {
-  try {
-    const response = await axios.post(`api/v1/employee/store`, {
-      uuid: reactive.uuid,
-      nama: reactive.nama,
-      address: reactive.address,
-      code: reactive.code,
-    });
-    
-    return response.data;
-  } catch (error) {
-    // Log or handle the error in a more informative way
-    console.error('Error validating :', error);
-    return false;
-  }
+		const url = id ? `api/v1/client/${id}/update` : 'api/v1/client/store';
+		const method = id? 'put' : 'post';
+		const request = { method, url, data: payload };
+		const response = await axios(request);
+		
+		return response.data;
+	} catch (error) {
+		console.error('Error validating:', error);
+		return false;
+	}
 }

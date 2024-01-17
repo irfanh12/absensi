@@ -23,8 +23,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 
 use App\Http\Controllers\Api\HrController;
-use App\Http\Controllers\Api\KlienController;
-use App\Http\Controllers\Api\KaryawanController;
+use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\JamKerjaController;
 use App\Http\Controllers\Api\TimesheetController;
 use App\Http\Controllers\Api\ReportController;
@@ -38,12 +38,25 @@ Route::prefix('v1')->group(function () {
         });
     });
 
-    Route::controller(KaryawanController::class)->group(function () {
+    Route::controller(EmployeeController::class)->group(function () {
         Route::prefix('employee')->group(function () {
             Route::get('lists', 'lists')->middleware(['auth:sanctum']);
             Route::get('get-list-clients', 'getListClients')->middleware(['auth:sanctum']);
 
             Route::post('store', 'store')->middleware(['auth:sanctum']);
+            Route::get('edit/{id}', 'edit')->middleware(['auth:sanctum']);
+            Route::put('{id}/update', 'update')->middleware(['auth:sanctum']);
+            Route::delete('{id}/destroy', 'destroy')->middleware(['auth:sanctum']);
+        });
+    });
+
+    Route::controller(ClientController::class)->group(function () {
+        Route::prefix('client')->group(function () {
+            Route::get('lists', 'lists')->middleware(['auth:sanctum']);
+            Route::get('get-list-clients', 'getListClients')->middleware(['auth:sanctum']);
+
+            Route::post('store', 'store')->middleware(['auth:sanctum']);
+            Route::get('edit/{id}', 'edit')->middleware(['auth:sanctum']);
             Route::put('{id}/update', 'update')->middleware(['auth:sanctum']);
             Route::delete('{id}/destroy', 'destroy')->middleware(['auth:sanctum']);
         });

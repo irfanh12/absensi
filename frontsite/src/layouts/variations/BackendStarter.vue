@@ -46,6 +46,7 @@ store.mainContent({ mode: "narrow" });
               name: 'Dashboard',
               to: 'dashboard',
               icon: 'si si-speedometer',
+              parent: 'dashboard',
             },
             {
               name: 'Menus',
@@ -55,19 +56,22 @@ store.mainContent({ mode: "narrow" });
               name: 'Klien',
               to: 'klien-index',
               icon: 'fa fa-user-tie',
-              permissions: permissions.klien.includes(auth.position)
+              permissions: permissions.klien.includes(auth.position),
+              parent: 'klien',
             },
             {
               name: 'Karyawan',
               to: 'karyawan-index',
               icon: 'fa fa-users',
-              permissions: permissions.karyawan.includes(auth.position)
+              permissions: permissions.karyawan.includes(auth.position),
+              parent: 'karyawan',
             },
             {
               name: 'Timesheet',
               to: 'timesheet-index',
               icon: 'fa fa-sheet-plastic',
-              permissions: permissions.timesheet.includes(auth.position)
+              permissions: permissions.timesheet.includes(auth.position),
+              parent: 'timesheet',
             },
             {
               name: 'Action',

@@ -12,7 +12,7 @@ class Karyawan extends Model
 
     protected $table = 'karyawan';
 
-    protected $with = ['user_type'];
+    protected $with = ['perusahaan', 'user_type'];
 
     public $incrementing = false;
     protected $keyType = 'string';
@@ -51,5 +51,9 @@ class Karyawan extends Model
 
     public function user_type() {
         return $this->hasOne(UserType::class, 'id', 'type_id');
+    }
+
+    public function perusahaan() {
+        return $this->hasOne(Perusahaan::class, 'id', 'perusahaan_id');
     }
 }

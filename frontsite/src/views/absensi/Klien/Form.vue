@@ -16,14 +16,20 @@ let form = reactive({
   address: "",
   perusahaan_id: "",
   identify_id: "",
-  position: "",
+  position: "Klien",
   first_name: "",
   last_name: "",
   phone_number: "",
   birthdate: "",
-  gender: "",
+  gender: "male",
   address: "",
   salary: "",
+})
+
+let perusahaan = reactive({
+  nama_perusahaan: "",
+  address: "",
+  phone_number: "",
 })
 
 onMounted(() => {
@@ -36,31 +42,23 @@ onMounted(() => {
 function mappingForm(form, data) {
   form.id = data.id
   form.email = data.email
-  form.password = data.password
-  form.nama = data.nama
-  form.address = data.address
-  form.perusahaan_id = data.perusahaan_id
-  form.identify_id = data.identify_id
-  form.position = data.position
-  form.first_name = data.first_name
-  form.last_name = data.last_name
-  form.phone_number = data.phone_number
-  form.birthdate = data.birthdate
-  form.gender = data.gender
-  form.address = data.address
-  form.salary = data.salary
-}
+  form.password = data.karyawan.password
+  form.nama = data.karyawan.nama
+  form.address = data.karyawan.address
+  form.perusahaan_id = data.karyawan.perusahaan_id
+  form.identify_id = data.karyawan.identify_id
+  form.position = data.karyawan.position
+  form.first_name = data.karyawan.first_name
+  form.last_name = data.karyawan.last_name
+  form.phone_number = data.karyawan.phone_number
+  form.birthdate = data.karyawan.birthdate
+  form.gender = data.karyawan.gender
+  form.address = data.karyawan.address
+  form.salary = data.karyawan.salary
 
-async function getListClients(clients) {
-  try {
-    const respData = await KlienController.getListClients();
-    
-    if (respData.success) {
-      clients.data = respData.data;
-    }
-  } catch (error) {
-    console.error(error);
-  }
+  perusahaan.nama_perusahaan = data.karyawan.perusahaan.nama_perusahaan
+  perusahaan.address = data.karyawan.perusahaan.address
+  perusahaan.phone_number = data.karyawan.perusahaan.phone_number
 }
 
 async function loadDataForm(form, klien) {
@@ -78,7 +76,12 @@ async function loadDataForm(form, klien) {
 async function onSubmit() {
   klien.value.statusLoading()
   try {
-    const { success, data } = await KlienController.storeKlien(form);
+    const payload = {
+      klien: {...form},
+      perusahaan: {...perusahaan},
+    }
+
+    const { success, data } = await KlienController.storeKlien(payload);
     console.log(success, data)
     if (success) {
       klien.value.statusNormal()
@@ -96,6 +99,10 @@ async function onSubmit() {
       <form @submit.prevent="onSubmit">
 
         <div class="mb-4">
+          <h3>Login akun</h3>
+        </div>
+
+        <div class="mb-4">
           <label class="form-label" for="email">
             Email <span class="text-danger">*</span>
           </label>
@@ -107,6 +114,35 @@ async function onSubmit() {
             Password <span class="text-danger">*</span>
           </label>
           <input required type="password" class="form-control" id="password" name="password" v-model="form.password"/>
+        </div>
+
+        <div class="mb-4">
+          <h3>Data Perusahaan</h3>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label" for="nama_perusahaan">
+            Nama Perusahaan <span class="text-danger">*</span>
+          </label>
+          <input required type="text" class="form-control" id="nama_perusahaan" name="nama_perusahaan" v-model="perusahaan.nama_perusahaan"/>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label" for="perusahaan.phone_number">
+            Phone Number <span class="text-danger">*</span>
+          </label>
+          <input required type="tel" class="form-control" id="perusahaan.phone_number" name="perusahaan.phone_number" v-model="perusahaan.phone_number"/>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label" for="perusahaan.address">
+            Address <span class="text-danger">*</span>
+          </label>
+          <textarea rows="5" required class="form-control" id="perusahaan.address" name="perusahaan.address" v-model="perusahaan.address"/>
+        </div>
+
+        <div class="mb-4">
+          <h3>Data Klien</h3>
         </div>
 
         <div class="row mb-4">
@@ -123,6 +159,42 @@ async function onSubmit() {
             </label>
             <input required type="text" class="form-control" id="last_name" name="last_name" v-model="form.last_name"/>
           </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label">Gender</label>
+          <div class="space-x-2">
+            <div class="form-check form-check-inline">
+              <input
+                class="form-check-input"
+                type="radio"
+                id="male-gender"
+                name="gender"
+                v-model="form.gender"
+                value="male"
+                checked
+              />
+              <label class="form-check-label" for="male-gender">Male</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input
+                class="form-check-input"
+                type="radio"
+                id="female-gender"
+                name="gender"
+                v-model="form.gender"
+                value="female"
+              />
+              <label class="form-check-label" for="female-gender">Female</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label" for="identify_id">
+            Identity ID (KTP/SIM) <span class="text-danger">*</span>
+          </label>
+          <input required type="text" class="form-control" id="identify_id" name="identify_id" v-model.number="form.identify_id"/>
         </div>
 
         <div class="mb-4">
