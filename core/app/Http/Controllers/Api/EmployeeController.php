@@ -11,17 +11,22 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
-class KaryawanController extends Controller
+class EmployeeController extends Controller
 {
     public function lists(Request $request) {
         $responseOutput = $this->responseOutput;
 
         $input = $request->all();
 
-        $lists = Karyawan::where("type_id", $input["type_id"] ?? 4)->paginate($input['per_page'] ?? 10);
+        $lists = User::whereHas('karyawan', function ($query) use ($input) {
+            if(is_array($input["type_id"])) {
+                $query->whereIn("type_id", $input["type_id"]);
+            } else {
+                $query->whereIn("type_id", $input["type_id"]);
+            }
+        })->paginate($input['per_page'] ?? 10);
 
         $responseOutput['success'] = true;
         $responseOutput['message'] = trans('response.success.get_karyawan');
@@ -41,6 +46,14 @@ class KaryawanController extends Controller
         $responseOutput = $this->responseOutput;
 
         $input = $request->all();
+
+        $validator = validator($input, [
+            'identify_id' => 'required|unique:karyawan',
+            'email' => 'required|email|unique:users',
+        ]);
+        if($validator->fails()) {
+            abort(500, $validator->messages()->first());
+        }
 
         $password = $input['password'] == 'generate' ? Str::random(8) : $input['password'];
         $password_hash = Hash::make($password);
@@ -141,7 +154,7 @@ class KaryawanController extends Controller
             // $token = $user->createToken('PresensiToken', $this->enumType($user_type))->plainTextToken;
 
             $responseOutput['success'] = true;
-            $responseOutput['message'] = trans('response.success.post_karyawan');
+            $responseOutput['message'] = trans('response.success.update_karyawan');
             $responseOutput['data'] = [
                 'user' => $user,
             ];
@@ -158,51 +171,15 @@ class KaryawanController extends Controller
 
         $input = $request->all();
 
-        $password = $input['password'] == 'generate' ? Str::random(8) : $input['password'];
-        $password_hash = Hash::make($password);
-
         DB::beginTransaction();
         try {
-            Karyawan::where([
-                ['id', $uuid]
-            ])->update([
-                'perusahaan_id' => $input['perusahaan_id'],
-                'identify_id'   => $input['identify_id'],
-                'type_id'       => $input['type_id'],
-                'position'      => $input['position'],
-                'first_name'    => $input['first_name'],
-                'last_name'     => $input['last_name'],
-                'phone_number'  => $input['phone_number'],
-                'birthdate'     => $input['birthdate'],
-                'gender'        => $input['gender'],
-                'address'       => $input['address'],
-                'salary'        => $input['salary'],
-                'updated_at'    => now()->timestamp,
-            ]);
 
-            User::where([
-                ['id', $uuid]
-            ])->update([
-                'email'         => $input['email'],
-                'password'      => $password_hash,
-                'updated_at'    => now()->timestamp,
-            ]);
+            Karyawan::find($uuid)->delete();
 
             DB::commit();
 
-            $user = User::find($uuid);
-            // $user->tokens()->delete();
-
-            // $user_type = $user->karyawan->user_type;
-            // $user_type = Str::snake($user_type->type);
-
-            // $token = $user->createToken('PresensiToken', $this->enumType($user_type))->plainTextToken;
-
             $responseOutput['success'] = true;
-            $responseOutput['message'] = trans('response.success.post_karyawan');
-            $responseOutput['data'] = [
-                'user' => $user,
-            ];
+            $responseOutput['message'] = trans('response.success.delete_karyawan');
 
             return response()->json($responseOutput);
         } catch(\Exception $e) {
@@ -215,10 +192,10 @@ class KaryawanController extends Controller
         $responseOutput = $this->responseOutput;
 
         try {
-            $klien = Karyawan::where('type_id', 2);
+            $klien = Karyawan::where('type_id', 2)->get();
 
             $responseOutput['success'] = true;
-            $responseOutput['message'] = trans('response.success.get_klien');
+            $responseOutput['message'] = trans('response.success.get_karyawan');
             $responseOutput['data'] = $klien;
 
             return response()->json($responseOutput);

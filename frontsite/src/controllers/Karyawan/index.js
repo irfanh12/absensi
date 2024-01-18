@@ -29,11 +29,46 @@ export async function loadKaryawan(reactive, ref) {
     ref.value.statusNormal()
     return response.data;
   } catch (error) {
+    ref.value.statusNormal()
+    alert(error.message);
     // Log or handle the error in a more informative way
     console.error('Error validating :', error);
     return false;
   }
 }
+
+export async function storeKaryawan(reactive, ref) {
+  try {
+    const payload = { ...reactive };
+		const id = payload.id;
+
+		const url = id ? `api/v1/employee/${id}/update` : 'api/v1/employee/store';
+		const method = id? 'put' : 'post';
+		const request = { method, url, data: payload };
+		const response = await axios(request);
+    
+    return response.data;
+  } catch (error) {
+    ref.value.statusNormal()
+    const errorResp = error.response.data
+    alert(errorResp.error.message);
+    // Log or handle the error in a more informative way
+    console.error('Error validating:', errorResp.error.message);
+    return false;
+  }
+}
+
+export async function deleteItem(id) {
+	try {
+		const response = await axios.delete(`api/v1/employee/${id}/destroy`);
+		
+		return response.data;
+	} catch (error) {
+		console.error('Error validating:', error);
+		return false;
+	}
+}
+
 
 export async function getListClients() {
   try {
@@ -43,21 +78,6 @@ export async function getListClients() {
   } catch (error) {
     // Log or handle the error in a more informative way
     console.error('Error validating :', error);
-    return false;
-  }
-}
-
-export async function storeKaryawan(reactive) {
-  try {
-    const payload = { ...reactive };
-    const url = reactive.id ? `api/v1/employee/${payload.id}/update` : 'api/v1/employee/store';
-    const method = reactive.id ? 'put' : 'post';
-    const request = { method, url, data: payload };
-    const response = await axios(request);
-    
-    return response.data;
-  } catch (error) {
-    console.error('Error validating:', error);
     return false;
   }
 }

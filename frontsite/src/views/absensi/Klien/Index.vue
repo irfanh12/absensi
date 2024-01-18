@@ -52,7 +52,6 @@ function loadDataAndUpdateTable(table, klien) {
     });
 }
 
-
 /**
  * A function that handles pagination click events.
  *
@@ -65,6 +64,30 @@ function paginateClick(pageNumber) {
   table.page = pageNumber;
   loadDataAndUpdateTable(table, klien);
 }
+
+/**
+ * Deletes an item by its ID and company ID.
+ *
+ * @param {number} id - The ID of the item to delete.
+ * @param {number} perusahaan_id - The ID of the company the item belongs to.
+ * @return {Promise} A promise that resolves when the item is deleted successfully.
+ */
+function deleteItem(id, perusahaan_id) {
+  const confirmMessage = 'Are you sure you want to delete this?';
+  const confirmed = confirm(confirmMessage);
+  if (!confirmed) {
+    return;
+  }
+   
+  return KlienController.deleteItem(id, perusahaan_id)
+    .then(({ success, data }) => {
+      if (success) {
+        loadDataAndUpdateTable(table, klien);
+      }
+    }).catch(error => {
+      console.error(error);
+    });
+}
 </script>
 
 <template>
@@ -76,14 +99,14 @@ function paginateClick(pageNumber) {
         </RouterLink>
       </template>
       
-      <table class="table table-hover table-bordered">
+      <table class="table table-hover table-bordered" style="font-size: 14px !important;">
         <thead>
           <tr>
-            <th class="table-active" style="width: 200px;">Klien Name</th>
+            <th class="table-active" style="width: 20%;">Nama Klien</th>
+            <th class="table-active">Perusahaan</th>
             <th class="table-active">Email</th>
-            <th class="table-active">Address</th>
-            <th class="table-active">Code</th>
-            <th class="text-center table-active" style="width: 20%">
+            <th class="table-active">Phone Number</th>
+            <th class="text-center table-active" style="width: 15%">
               Actions
             </th>
           </tr>
@@ -95,10 +118,10 @@ function paginateClick(pageNumber) {
             </td>
           </tr>
           <tr v-for="item in table.lists" :key="item.id">
-            <td>{{ item.nama }}</td>
-            <td>{{ item.user.email }}</td>
-            <td>{{ item.address }}</td>
-            <td>{{ item.code }}</td>
+            <td>{{ `${item.karyawan.first_name} ${item.karyawan.last_name}` }}</td>
+            <td>{{ item.karyawan.perusahaan.nama_perusahaan }}</td>
+            <td>{{ item.email }}</td>
+            <td>{{ item.karyawan.phone_number }}</td>
             <td class="text-center">
               <div class="d-flex gap-2 justify-content-center align-items-center">
                 <router-link :to="{ name: 'klien-form', params: { id: item.id } }">
@@ -108,7 +131,7 @@ function paginateClick(pageNumber) {
                 </router-link>
   
                 <button type="button" class="btn btn-sm btn-danger"
-                  @click="deleteItem(item.id)">
+                  @click="deleteItem(item.id, item.karyawan.perusahaan_id)">
                   Delete
                 </button>
               </div>

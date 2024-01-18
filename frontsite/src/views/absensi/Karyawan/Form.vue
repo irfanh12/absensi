@@ -12,7 +12,6 @@ let form = reactive({
   email: "",
   password: "",
   type_id: 4,
-  nama: "",
   address: "",
   perusahaan_id: "e2d43ef5-cc0c-4ebe-bdb0-f66dbb230d51",
   identify_id: "",
@@ -21,7 +20,7 @@ let form = reactive({
   last_name: "",
   phone_number: "",
   birthdate: "",
-  gender: "",
+  gender: "male",
   address: "",
   salary: "",
 })
@@ -84,7 +83,7 @@ async function loadDataForm(form, karyawan) {
 async function onSubmit() {
   karyawan.value.statusLoading()
   try {
-    const { success, data } = await KaryawanController.storeKaryawan(form);
+    const { success, data } = await KaryawanController.storeKaryawan(form, karyawan);
     console.log(success, data)
     if (success) {
       karyawan.value.statusNormal()
@@ -102,10 +101,14 @@ async function onSubmit() {
       <form @submit.prevent="onSubmit">
 
         <div class="mb-4">
-          <label class="form-label" for="example-select">Status Karyawan</label>
+          <h3>Status Karyawan</h3>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label" for="example-radios">Status Karyawan</label>
           <div class="form-check">
             <input
-              v-model="form.type_id"
+              v-model.number="form.type_id"
               class="form-check-input"
               type="radio"
               id="example-radios-default1"
@@ -116,7 +119,7 @@ async function onSubmit() {
           </div>
           <div class="form-check">
             <input
-              v-model="form.type_id"
+              v-model.number="form.type_id"
               class="form-check-input"
               type="radio"
               id="example-radios-default2"
@@ -130,10 +133,16 @@ async function onSubmit() {
           <label class="form-label" for="email">
             Klien
           </label>
-          <select class="form-select" id="example-select" name="example-select">
+          <select class="form-select" id="perusahaan_id" name="perusahaan_id" v-model="form.perusahaan_id">
             <option selected>Pilih Klien</option>
-            <option value="1"></option>
+            <option :value="client.perusahaan.id" v-for="client in clients.data" :key="client.id">
+              {{ client.perusahaan.nama_perusahaan }}
+            </option>
           </select>
+        </div>
+
+        <div class="mb-4">
+          <h3>Login akun</h3>
         </div>
 
         <div class="mb-4">
@@ -150,6 +159,17 @@ async function onSubmit() {
           <input required type="password" class="form-control" id="password" name="password" v-model="form.password"/>
         </div>
 
+        <div class="mb-4">
+          <h3>Data Karyawan</h3>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label" for="position">
+            Posisi <span class="text-danger">*</span>
+          </label>
+          <input required type="text" class="form-control" id="position" name="position" v-model="form.position"/>
+        </div>
+
         <div class="row mb-4">
           <div class="col-12 col-md-6">
             <label class="form-label" for="first_name">
@@ -164,6 +184,42 @@ async function onSubmit() {
             </label>
             <input required type="text" class="form-control" id="last_name" name="last_name" v-model="form.last_name"/>
           </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label">Gender</label>
+          <div class="space-x-2">
+            <div class="form-check form-check-inline">
+              <input
+                class="form-check-input"
+                type="radio"
+                id="male-gender"
+                name="gender"
+                v-model="form.gender"
+                value="male"
+                checked
+              />
+              <label class="form-check-label" for="male-gender">Male</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input
+                class="form-check-input"
+                type="radio"
+                id="female-gender"
+                name="gender"
+                v-model="form.gender"
+                value="female"
+              />
+              <label class="form-check-label" for="female-gender">Female</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label" for="identify_id">
+            Identity ID (KTP/SIM) <span class="text-danger">*</span>
+          </label>
+          <input required type="text" class="form-control" id="identify_id" name="identify_id" v-model.number="form.identify_id"/>
         </div>
 
         <div class="mb-4">

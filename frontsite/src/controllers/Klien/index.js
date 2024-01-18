@@ -35,7 +35,7 @@ export async function loadKlien(reactive, ref) {
   }
 }
 
-export async function storeKlien(reactive) {
+export async function storeKlien(reactive, ref) {
 	try {
 		const payload = { ...reactive };
 		const id = payload.klien.id;
@@ -44,6 +44,21 @@ export async function storeKlien(reactive) {
 		const method = id? 'put' : 'post';
 		const request = { method, url, data: payload };
 		const response = await axios(request);
+		
+		return response.data;
+	} catch (error) {
+		ref.value.statusNormal()
+    const errorResp = error.response.data
+    alert(errorResp.error.message);
+    // Log or handle the error in a more informative way
+    console.error('Error validating:', errorResp.error.message);
+    return false;
+	}
+}
+
+export async function deleteItem(id, perusahaan_id) {
+	try {
+		const response = await axios.delete(`api/v1/client/${id}/destroy?perusahaan_id=${perusahaan_id}`);
 		
 		return response.data;
 	} catch (error) {

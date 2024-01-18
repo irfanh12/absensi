@@ -12,7 +12,6 @@ let form = reactive({
   email: "",
   password: "",
   type_id: 2,
-  nama: "",
   address: "",
   perusahaan_id: "",
   identify_id: "",
@@ -81,7 +80,7 @@ async function onSubmit() {
       perusahaan: {...perusahaan},
     }
 
-    const { success, data } = await KlienController.storeKlien(payload);
+    const { success, data } = await KlienController.storeKlien(payload, klien);
     console.log(success, data)
     if (success) {
       klien.value.statusNormal()

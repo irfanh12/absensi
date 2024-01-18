@@ -2,6 +2,10 @@
 import { onMounted, reactive, ref } from "vue";
 import * as KaryawanController from "@/controllers/Karyawan";
 
+import { useAuth } from "@/stores/auth"
+const auth = useAuth()
+const permissions = auth.permissions()
+
 const karyawan = ref(null)
 
 let table = reactive({
@@ -10,7 +14,7 @@ let table = reactive({
   page: 1,
   per_page: 15,
   last_page: 0,
-  type_id: 2
+  type_id: ['Human Resource', 'Administrator'].includes(auth.position) ? [4,5] : 5
 })
 
 onMounted(() => {
@@ -65,6 +69,29 @@ function paginateClick(pageNumber) {
   table.page = pageNumber;
   loadDataAndUpdateTable(table, karyawan);
 }
+
+/**
+ * Deletes an item with the given ID.
+ *
+ * @param {string} id - The ID of the item to delete.
+ * @return {Promise} A promise that resolves with the result of the deletion.
+ */
+function deleteItem(id) {
+  const confirmMessage = 'Are you sure you want to delete this?';
+  const confirmed = confirm(confirmMessage);
+  if (!confirmed) {
+    return;
+  }
+   
+  return KaryawanController.deleteItem(id)
+    .then(({ success, data }) => {
+      if (success) {
+        loadDataAndUpdateTable(table, karyawan);
+      }
+    }).catch(error => {
+      console.error(error);
+    });
+}
 </script>
 
 <template>
@@ -76,16 +103,14 @@ function paginateClick(pageNumber) {
         </RouterLink>
       </template>
       
-      <table class="table table-hover table-bordered">
+      <table class="table table-hover table-bordered" style="font-size: 14px !important;">
         <thead>
           <tr>
-            <th class="table-active" style="width: 15%;">Fullname</th>
+            <th class="table-active" style="width: 25%;">Fullname</th>
             <th class="table-active">Email</th>
             <th class="table-active">Position</th>
             <th class="table-active">Phone Number</th>
-            <th class="table-active">Created At</th>
-            <th class="table-active">Updated At</th>
-            <th class="text-center table-active" style="width: 15%">
+            <th class="text-center table-active" style="width: 10%">
               Actions
             </th>
           </tr>
@@ -97,11 +122,10 @@ function paginateClick(pageNumber) {
             </td>
           </tr>
           <tr v-for="item in table.lists" :key="item.id">
-            <td>{{ item.fullname }}</td>
+            <td>{{ `${item.karyawan.first_name} ${item.karyawan.last_name}` }}</td>
             <td>{{ item.email }}</td>
+            <td>{{ item.karyawan.position }}</td>
             <td>{{ item.karyawan.phone_number }}</td>
-            <td>{{ item.karyawan.created_at }}</td>
-            <td>{{ item.karyawan.updated_at }}</td>
             <td class="text-center">
               <div class="d-flex gap-2 justify-content-center align-items-center">
                 <router-link :to="{ name: 'karyawan-form', params: { id: item.id } }">

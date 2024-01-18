@@ -53,7 +53,6 @@ Route::prefix('v1')->group(function () {
     Route::controller(ClientController::class)->group(function () {
         Route::prefix('client')->group(function () {
             Route::get('lists', 'lists')->middleware(['auth:sanctum']);
-            Route::get('get-list-clients', 'getListClients')->middleware(['auth:sanctum']);
 
             Route::post('store', 'store')->middleware(['auth:sanctum']);
             Route::get('edit/{id}', 'edit')->middleware(['auth:sanctum']);
