@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, computed } from "vue";
+import { reactive, computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useTemplateStore } from "@/stores/template";
 import { useAuth } from "@/stores/auth";
@@ -14,6 +14,8 @@ const router = useRouter();
 
 // Auth store
 const auth = useAuth();
+
+const login = ref(null);
 
 // Input state variables
 const state = reactive({
@@ -44,9 +46,11 @@ const v$ = useVuelidate(rules, state);
  * @return {Promise<void>} A promise that resolves when the login is successful.
  */
 async function onSubmit() {
+  login.value.statusLoading()
   const result = await v$.value.$validate();
 
   if (!result) {
+    login.value.statusNormal()
     return;
   }
 
@@ -66,10 +70,13 @@ async function onSubmit() {
 
     // Put into store
     auth.login(`${first_name} ${last_name}`, position);
+    
+    login.value.statusNormal()
 
     // Redirect to the dashboard
     router.push({ name: "dashboard" });
   } catch (err) {
+    login.value.statusNormal()
     if(err.response) {
         localStorage.clear();
         alert(err.response.data.error.message);
@@ -87,7 +94,7 @@ async function onSubmit() {
       <div class="row justify-content-center push">
         <div class="col-md-8 col-lg-6 col-xl-4">
           <!-- Sign In Block -->
-          <BaseBlock class="mb-0">
+          <BaseBlock ref="login" class="mb-0">
             <div class="p-sm-3 px-lg-4 px-xxl-5 py-lg-5">
               <h1 class="h2 mb-1">{{ store.app.name }}</h1>
               <p class="fw-medium text-muted">Welcome, please login.</p>
