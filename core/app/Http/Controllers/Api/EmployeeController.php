@@ -113,6 +113,14 @@ class EmployeeController extends Controller
 
         $input = $request->all();
 
+        $validator = validator($input, [
+            'identify_id' => 'required|unique:karyawan',
+            'email' => 'required|email|unique:users',
+        ]);
+        if($validator->fails()) {
+            abort(500, $validator->messages()->first());
+        }
+
         $password = $input['password'] == 'generate' ? Str::random(8) : $input['password'];
         $password_hash = Hash::make($password);
 

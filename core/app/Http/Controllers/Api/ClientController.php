@@ -44,6 +44,14 @@ class ClientController extends Controller
 
         $input = $request->all();
 
+        $validator = validator($input['klien'], [
+            'identify_id' => 'required|unique:karyawan',
+            'email' => 'required|email|unique:users',
+        ]);
+        if($validator->fails()) {
+            abort(500, $validator->messages()->first());
+        }
+
         $klien = $input['klien'];
         $perusahaan = $input['perusahaan'];
 
@@ -125,6 +133,14 @@ class ClientController extends Controller
         $responseOutput = $this->responseOutput;
 
         $input = $request->all();
+
+        $validator = validator($input['klien'], [
+            'identify_id' => 'required|unique:karyawan',
+            'email' => 'required|email|unique:users',
+        ]);
+        if($validator->fails()) {
+            abort(500, $validator->messages()->first());
+        }
 
         $klien = $input['klien'];
         $perusahaan = $input['perusahaan'];
