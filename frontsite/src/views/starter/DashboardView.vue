@@ -109,14 +109,21 @@ onMounted(() => {
 
       data.map_direction.lat = latitude
       data.map_direction.lng = longitude
-      
-      new google.maps.Map(document.getElementById("map"), {
+
+      const map = document.getElementById("map")
+      new google.maps.Map(map, {
+        draggable: false,
+        zoomControl: false,
+        scrollwheel: false,
+        disableDoubleClickZoom: true,
+        fullscreenControl: false,
         center: { lat: latitude, lng: longitude },
-        zoom: 12,
+        zoom: 15,
       })
 
       setTimeout(() => {
         formcontrolMaps.value.statusNormal()
+        document.querySelector('#map > div:last-child').style.display = 'none';
       }, 1000)
     } catch (error) {
       // Handle any errors that occur
@@ -137,11 +144,17 @@ onMounted(() => {
 
     new google.maps.Map(document.getElementById("mapResult"), {
       center: { lat: data.map_direction.lat, lng: data.map_direction.lng },
-      zoom: 12,
+      draggable: false,
+      zoomControl: false,
+      scrollwheel: false,
+      disableDoubleClickZoom: true,
+      fullscreenControl: false,
+      zoom: 15,
     })
 
     setTimeout(() => {
       formcontrolResult.value.statusNormal()
+      document.querySelector('#mapResult > div:last-child').style.display = 'none';
     }, 500)
   })
 
@@ -305,6 +318,15 @@ async function storeTimesheet() {
     border-color: transparent;
   }
 }
+
+.marker {
+  top: 0;
+  left: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 </style>
 
 <template>
@@ -369,7 +391,7 @@ async function storeTimesheet() {
     <!-- Page Content -->
     <div class="content content-boxed">
       <div class="row">
-        <div class="col-md-7 col-xl-8">
+        <div :class="{ 'col-md-7 col-xl-8': permissions.presensi.includes(auth.position), 'col-12': !permissions.presensi.includes(auth.position) }">
           <!-- Updates -->
           <BaseBlock id="timesheet" class="timesheet js-sidebar-scroll max-screen">
             <ul class="timeline timeline-alt py-0">
@@ -391,7 +413,7 @@ async function storeTimesheet() {
           </BaseBlock>
           <!-- END Updates -->
         </div>
-        <div class="col-md-5 col-xl-4">
+        <div class="col-md-5 col-xl-4" v-show="permissions.presensi.includes(auth.position)">
           <!-- Products -->
           <BaseBlock ref="presensiEmployee">
             <template #title>
@@ -518,8 +540,11 @@ async function storeTimesheet() {
           <BaseBlock ref="formcontrolMaps" transparent class="mb-0">
 
             <template #content>
-              <div class="block-content fs-sm">
+              <div class="block-content fs-sm position-relative">
                 <div id="map" style="height: 400px"></div>
+                <div class="marker position-absolute">
+                  <img src="@/assets/images/location-pin.png" alt="marker" style="width: 10%; opacity: .8;" />
+                </div>
               </div>
               <div class="block-content block-content-full text-end bg-body d-flex justify-content-center">
                 <button
@@ -555,7 +580,12 @@ async function storeTimesheet() {
             <template #content>
               <div class="result block-content fs-sm">
                 <div class="card">
-                  <div id="mapResult" style="height: 250px" class="card-img-top"></div>
+                  <div class="position-relative">
+                    <div id="mapResult" style="height: 250px" class="card-img-top"></div>
+                    <div class="marker position-absolute">
+                      <img src="@/assets/images/location-pin.png" alt="marker" style="width: 10%; opacity: .8;" />
+                    </div>
+                  </div>
                   <div class="card-body">
                     <p class="card-text">
                       <div class="d-flex flex-column">

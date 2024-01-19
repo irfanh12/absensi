@@ -58,8 +58,8 @@ async function onSubmit() {
     await axios.get('sanctum/csrf-cookie');
     const response = await axios.post('api/v1/auth/login', state);
 
-    const { token, user_details } = response.data.data;
-    const { first_name, last_name, position } = user_details.karyawan;
+    const { token, user_details, position } = response.data.data;
+    const { first_name, last_name } = user_details.karyawan;
 
     localStorage.setItem("token", token);
     localStorage.setItem("fullname", `${first_name} ${last_name}`);
