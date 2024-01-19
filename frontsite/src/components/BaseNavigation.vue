@@ -110,7 +110,7 @@ function linkClicked(e, submenu) {
 <template>
   <ul :class="classContainer">
     <li
-      v-for="(node, index) in nodes"
+      v-for="(node, index) in nodes.filter(node => node.permission)"
       :key="`node-${index}`"
       :class="{
         'nav-main-heading': node.heading,

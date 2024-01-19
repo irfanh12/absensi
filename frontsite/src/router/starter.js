@@ -8,6 +8,7 @@ import dashboard from "@/router/menus/dashboard";
 import karyawan from "@/router/menus/karyawan";
 import klien from "@/router/menus/klien";
 import timesheet from "@/router/menus/timesheet";
+import presensi from "@/router/menus/presensi";
 
 // Set all routes
 const routes = [
@@ -16,6 +17,7 @@ const routes = [
   ...karyawan,
   ...klien,
   ...timesheet,
+  ...presensi,
 ]
 
 // Create Router
