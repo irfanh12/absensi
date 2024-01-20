@@ -2,68 +2,58 @@ export async function loadData(reactive, ref) {
   ref.value.statusLoading()
 
   try {
-    const response = await axios.get('api/v1/owner/lists', {
+    const response = await axios.get('api/v1/timesheet/lists', {
       params: {
-        page: reactive.items.page,
-        per_page: reactive.items.per_page,
-        keyword: reactive.items.keyword,
+        page: reactive.page,
+        per_page: reactive.per_page,
+        keyword: reactive.keyword,
       }
     });
 
     ref.value.statusNormal()
     return response.data;
   } catch (error) {
+    ref.value.statusNormal()
+    const errorResp = error.response.data
+    alert(errorResp.error.message);
     // Log or handle the error in a more informative way
-    console.error('Error validating :', error);
+    console.error('Error validating:', errorResp.error.message);
     return false;
   }
 }
 
-export async function loadOwner(reactive, ref) {
+export async function approveTimesheet(reactive, ref) {
   ref.value.statusLoading()
 
   try {
-    const response = await axios.get(`api/v1/owner/edit/${reactive.uuid}`);
+    const response = await axios.post('api/v1/timesheet/approve', reactive);
 
     ref.value.statusNormal()
     return response.data;
   } catch (error) {
+    ref.value.statusNormal()
+    const errorResp = error.response.data
+    alert(errorResp.error.message);
     // Log or handle the error in a more informative way
-    console.error('Error validating :', error);
+    console.error('Error validating:', errorResp.error.message);
     return false;
   }
 }
 
-export async function onSubmit(reactive) {
+export async function rejectTimesheet(reactive, ref) {
+  ref.value.statusLoading()
 
   try {
-    const response = await axios.post(`api/v1/auth/register`, {
-      email: reactive.email,
-      password: reactive.password,
-      user_type_id: reactive.user_type_id,
-    });
-    
-    return response.data;
-  } catch (error) {
-    // Log or handle the error in a more informative way
-    console.error('Error validating :', error);
-    return false;
-  }
-}
+    const response = await axios.post('api/v1/timesheet/reject', reactive);
 
-export async function storeOwner(reactive) {
-  try {
-    const response = await axios.post(`api/v1/owner/store`, {
-      uuid: reactive.uuid,
-      nama: reactive.nama,
-      address: reactive.address,
-      code: reactive.code,
-    });
-    
+    ref.value.statusNormal()
     return response.data;
   } catch (error) {
+    ref.value.statusNormal()
+    const errorResp = error.response.data
+    alert(errorResp.error.message);
     // Log or handle the error in a more informative way
-    console.error('Error validating :', error);
+    console.error('Error validating:', errorResp.error.message);
     return false;
   }
 }

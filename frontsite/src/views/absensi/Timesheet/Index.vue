@@ -1,20 +1,28 @@
 <script setup>
 import { onMounted, reactive, ref } from "vue";
-import * as KlienController from "@/controllers/Klien";
+import * as TimesheetController from "@/controllers/Timesheet";
+import { formatTimestamp } from "@/stores/utils"
 
-const klien = ref(null)
+import { useAuth } from "@/stores/auth"
+
+const timesheet = ref(null)
+
+const auth = useAuth()
+const permissions = auth.permissions()
 
 let table = reactive({
   lists: [],
   total: 0,
   page: 1,
   per_page: 15,
-  last_page: 0,
-  type_id: 2
+  last_page: 0
 })
 
+const canApproveStatus = '';
+
 onMounted(() => {
-  loadDataAndUpdateTable(table, klien);
+  canApproveStatus = auth.position.includes('Klien') ? 'Pending' : 'Approve Client';
+  loadDataAndUpdateTable(table, timesheet);
 });
 
 /**
@@ -33,14 +41,14 @@ function updateTableItems(table, data) {
 }
 
 /**
- * Loads data from the klien and updates the table.
+ * Loads data from the timesheet and updates the table.
  *
  * @param {string} table - The table to update.
- * @param {object} klien - The klien object.
+ * @param {object} timesheet - The timesheet object.
  * @return {Promise} A promise that resolves when the data is loaded and the table is updated.
  */
-function loadDataAndUpdateTable(table, klien) {
-  return KlienController.loadData(table, klien)
+function loadDataAndUpdateTable(table, timesheet) {
+  return TimesheetController.loadData(table, timesheet)
     .then(respData => {
       const { success, data } = respData;
       
@@ -52,7 +60,6 @@ function loadDataAndUpdateTable(table, klien) {
     });
 }
 
-
 /**
  * A function that handles pagination click events.
  *
@@ -63,27 +70,85 @@ function paginateClick(pageNumber) {
   console.log("Pagination Click clicked");
 
   table.page = pageNumber;
-  loadDataAndUpdateTable(table, klien);
+  loadDataAndUpdateTable(table, timesheet);
+}
+
+function downloadReport() {
+  
+}
+
+async function approveItem(timesheetId) {
+  const shouldApprove = confirm("Are you sure you want to approve this timesheet?");
+  
+  if (!shouldApprove) {
+    return;
+  }
+
+  try {
+    const respData = await TimesheetController.approveTimesheet({ id: timesheetId }, timesheet);
+    
+    const { success, data } = respData;
+    
+    if (success) {
+      updateTableItems(table, data);
+    }
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function rejectItem(timesheetId) {
+  const shouldReject = confirm("Are you sure you want to reject this timesheet?");
+  
+  if (!shouldReject) {
+    return;
+  }
+
+  let message = prompt("Please enter your message:");
+  
+  while (message === '') {
+    alert("Message cannot be blank.");
+    message = prompt("Please enter your message:");
+  }
+  
+  if (message) {
+    try {
+      const respData = await TimesheetController.rejectTimesheet({
+        id: timesheetId,
+        remark_revision: message
+      }, timesheet);
+      
+      const { success, data } = respData;
+      
+      if (success) {
+        updateTableItems(table, data);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
 }
 </script>
 
 <template>
   <div class="content">
-    <BaseBlock ref="klien" title="Klien" class="mb-0">
+    <BaseBlock ref="timesheet" title="Timesheet" class="mb-0">
       <template #options>
-        <RouterLink :to="{ name: 'klien-form' }" class="btn btn-sm btn-primary">
-          <i class="fa fa-user-plus"></i> Create Klien
-        </RouterLink>
+        <button type="button" @click="downloadReport" class="btn btn-sm btn-success">
+          <i class="fa fa-download"></i> Download Report
+        </button>
       </template>
       
-      <table class="table table-hover table-bordered">
+      <table class="table table-hover table-bordered" style="font-size: 14px !important;">
         <thead>
           <tr>
-            <th class="table-active" style="width: 200px;">Klien Name</th>
-            <th class="table-active">Email</th>
-            <th class="table-active">Address</th>
-            <th class="table-active">Code</th>
-            <th class="text-center table-active" style="width: 20%">
+            <th class="text-center table-active" style="width: 10px;">#</th>
+            <th class="table-active" style="width: 200px;">Nama Karyawan</th>
+            <th class="table-active">Remark</th>
+            <th class="table-active" style="width: 5%">Status</th>
+            <th class="table-active" style="width: 15%">Created At</th>
+            <th class="table-active" style="width: 15%">Updated At</th>
+            <th class="text-center table-active" style="width: 15%">
               Actions
             </th>
           </tr>
@@ -94,23 +159,25 @@ function paginateClick(pageNumber) {
               No records found.
             </td>
           </tr>
-          <tr v-for="item in table.lists" :key="item.id">
-            <td>{{ item.nama }}</td>
-            <td>{{ item.user.email }}</td>
-            <td>{{ item.address }}</td>
-            <td>{{ item.code }}</td>
+          <tr v-for="(item, key) in table.lists" :key="item.id" class="align-middle">
+            <td>{{ key+1 }}</td>
+            <td>{{ `${item.karyawan.first_name} ${item.karyawan.last_name}` }}</td>
+            <td>{{ item.remarks }}</td>
+            <td><span class="badge " :class="item.status.class">{{ item.status.label }}</span></td>
+            <td>{{ formatTimestamp(item.created_at) }}</td>
+            <td>{{ formatTimestamp(item.updated_at) }}</td>
             <td class="text-center">
-              <div class="d-flex gap-2 justify-content-center align-items-center">
-                <router-link :to="{ name: 'klien-form', params: { id: item.id } }">
-                  <button type="button" class="btn btn-sm btn-primary">
-                    Edit
-                  </button>
-                </router-link>
-  
-                <button type="button" class="btn btn-sm btn-danger"
-                  @click="deleteItem(item.id)">
-                  Delete
+              <div class="d-flex gap-2 justify-content-center align-items-center" v-if="item.status.label.includes('Pending')">
+                <button type="button" class="btn btn-sm btn-info" @click="approveItem(item.id)">
+                  Approve
                 </button>
+  
+                <button type="button" class="btn btn-sm btn-danger" @click="rejectItem(item.id)">
+                  Reject
+                </button>
+              </div>
+              <div v-else>
+                -
               </div>
             </td>
           </tr>

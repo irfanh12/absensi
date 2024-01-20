@@ -189,6 +189,14 @@ function timesheetDateFormat(created_at) {
   return moment.unix(created_at).format('ddd, D MMM - hh:mm');
 }
 
+function editTimesheet(sheet) {
+  timesheet.data = {
+    id: sheet.id,
+    remarks: sheet.remarks,
+    revision: sheet.revision,
+  }
+}
+
 async function getTimesheetEmployee() {
   timesheetEmployee.value.statusLoading()
 
@@ -263,7 +271,10 @@ async function storePresensiEmployee() {
 
 async function storeTimesheet() {
   try {
-    const response = await axios.post(`api/v1/timesheet/store`, timesheet.data)
+    const response = await axios.post(`api/v1/timesheet/store`, {
+      id: timesheet.data.id ? timesheet.data.id : null,
+      remarks: timesheet.data.remarks,
+    })
     const respData = response.data
 
     toastNotif.date = respData.time_at
@@ -450,11 +461,11 @@ async function storeTimesheet() {
               <i class="si si-info text-muted me-1"></i> Timesheet
             </template>
 
-            <div class="fs-sm push" v-for="timesheet in auth.timesheets" :key="timesheet">
+            <div class="fs-sm push" v-for="sheets in auth.timesheets" :key="sheets">
               <div class="d-flex justify-content-between mb-2">
                 <div class="space-x-1 w-100 d-flex justify-content-between align-items-center">
-                  <span class="fw-semibold text-gray-lighter">{{ timesheetDateFormat(timesheet.created_at) }}</span>
-                  <span class="badge rounded-pill text-bg-primary" :class="timesheet.status.class">{{ timesheet.status.label }}</span>
+                  <span class="fw-semibold text-gray-lighter">{{ timesheetDateFormat(sheets.created_at) }}</span>
+                  <span class="badge rounded-pill text-bg-primary" :class="sheets.status.class">{{ sheets.status.label }}</span>
                 </div>
                 <!-- <div class="text-warning">
                   <i class="fa fa-star"></i>
@@ -464,7 +475,12 @@ async function storeTimesheet() {
                   <i class="fa fa-star"></i>
                 </div> -->
               </div>
-              <p class="mb-0 text-gray">{{ timesheet.remarks }}</p>
+              <div class="d-flex justify-content-between align-items-center">
+                <p class="mb-0 text-gray" style="line-height: 1;">{{ sheets.remarks }}</p>
+                <button :disabled="sheets.status.label.includes('Approved')" @click="editTimesheet(sheets)" style="font-size: 12px" type="button" class="btn btn-sm btn-alt-primary" data-bs-toggle="modal" data-bs-target="#modal-block-timesheet">
+                  Edit
+                </button>
+              </div>
             </div>
             <div class="text-center push w-100">
               <button v-show="!timesheet.store_timesheet" type="button" class="btn btn-sm btn-info w-100" data-bs-toggle="modal" data-bs-target="#modal-block-timesheet">
@@ -631,13 +647,22 @@ async function storeTimesheet() {
     >
       <div class="modal-dialog modal-dialog-popout modal-dialog-centered" role="document">
         <div class="modal-content">
-          <BaseBlock title="Add Timesheet" transparent class="mb-0">
+          <BaseBlock :title="`${timesheet.data.id ? 'Edit Timesheet' : 'Add Timesheet'}`" transparent class="mb-0">
 
             <template #content>
               <form @submit.prevent="storeTimesheet()">
                 <div class="result block-content fs-sm p-0">
                   <div class="card">
                     <div class="card-body">
+                      <figure v-if="timesheet.data.revision">
+                        <label class="form-label" for="example-textarea-input">Revision</label>
+                        <blockquote class="blockquote">
+                          <p><em>{{ timesheet.data.revision.remark_revision }}</em></p>
+                        </blockquote>
+                        <figcaption class="blockquote-footer">
+                          {{ `${timesheet.data.revision.karyawan.first_name} ${timesheet.data.revision.karyawan.last_name}` }}
+                        </figcaption>
+                      </figure>
                       <label class="form-label" for="example-textarea-input">Remarks</label>
                       <textarea
                         class="form-control"

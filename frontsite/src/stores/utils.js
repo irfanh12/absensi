@@ -116,6 +116,17 @@ export function justNowDate(date) {
 }
 
 /**
+ * Formats the given timestamp using the specified format.
+ *
+ * @param {number} timestamp - The timestamp to be formatted.
+ * @param {string} [format='MMM D, YYYY'] - The format to use for formatting the timestamp. Defaults to 'MMM D, YYYY'.
+ * @return {string} - The formatted timestamp.
+ */
+export function formatTimestamp(timestamp, format = 'MMM D, YYYY HH:mm') {  
+  return moment.unix(timestamp).format(format);
+}
+
+/**
  * Retrieves the value of a cookie by its name.
  *
  * @param {string} name - The name of the cookie to retrieve.

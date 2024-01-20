@@ -33,29 +33,47 @@ class EnumType extends Model
     }
 
     /**
-     * Retrieves the status of a timesheet based on the given status code.
+     * Retrieves the status, label, and class of a timesheet based on the given status code.
      *
      * @param int $status The status code of the timesheet.
-     * @return string The corresponding status of the timesheet.
+     * @return array Returns an array containing the label and class of the timesheet status.
      */
     public static function getStatusTimesheet(int $status)
     {
+        $result = [];
         switch ($status) {
             case 1:
-                return [
+                $result = [
                     'label' => 'Approved Client',
                     'class' => 'bg-info',
                 ];
+                break;
             case 2:
-                return [
+                $result = [
                     'label' => 'Approved HR',
                     'class' => 'bg-success',
                 ];
+                break;
+            case 3:
+                $result = [
+                    'label' => 'Rejected Client',
+                    'class' => 'bg-danger',
+                ];
+                break;
+            case 4:
+                $result = [
+                    'label' => 'Rejected HR',
+                    'class' => 'bg-danger',
+                ];
+                break;
             default:
-                return [
+                $result = [
                     'label' => 'Pending',
                     'class' => 'bg-black-50',
                 ];
+                break;
         }
+
+        return $result;
     }
 }

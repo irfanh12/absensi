@@ -18,7 +18,7 @@ return new class extends Migration
 
             $table->mediumText('remark_revision');
 
-            $table->unsignedBigInteger('status')->default(0);
+            // $table->unsignedBigInteger('status')->default(0);
 
             $table->unsignedBigInteger('created_at');
             $table->unsignedBigInteger('updated_at')->nullable();

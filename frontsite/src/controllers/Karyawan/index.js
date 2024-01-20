@@ -14,8 +14,11 @@ export async function loadData(reactive, ref) {
     ref.value.statusNormal()
     return response.data;
   } catch (error) {
+    ref.value.statusNormal()
+    const errorResp = error.response.data
+    alert(errorResp.error.message);
     // Log or handle the error in a more informative way
-    console.error('Error validating :', error);
+    console.error('Error validating:', errorResp.error.message);
     return false;
   }
 }
@@ -30,9 +33,10 @@ export async function loadKaryawan(reactive, ref) {
     return response.data;
   } catch (error) {
     ref.value.statusNormal()
-    alert(error.message);
+    const errorResp = error.response.data
+    alert(errorResp.error.message);
     // Log or handle the error in a more informative way
-    console.error('Error validating :', error);
+    console.error('Error validating:', errorResp.error.message);
     return false;
   }
 }
@@ -64,8 +68,12 @@ export async function deleteItem(id) {
 		
 		return response.data;
 	} catch (error) {
-		console.error('Error validating:', error);
-		return false;
+		ref.value.statusNormal()
+    const errorResp = error.response.data
+    alert(errorResp.error.message);
+    // Log or handle the error in a more informative way
+    console.error('Error validating:', errorResp.error.message);
+    return false;
 	}
 }
 
