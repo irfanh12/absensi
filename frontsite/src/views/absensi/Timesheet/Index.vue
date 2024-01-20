@@ -18,10 +18,10 @@ let table = reactive({
   last_page: 0
 })
 
-const canApproveStatus = '';
+let canApproveStatus = '';
 
 onMounted(() => {
-  canApproveStatus = auth.position.includes('Klien') ? 'Pending' : 'Approve Client';
+  canApproveStatus = auth.position.includes('Klien') ? 'Pending' : 'Approved Client';
   loadDataAndUpdateTable(table, timesheet);
 });
 
@@ -87,10 +87,10 @@ async function approveItem(timesheetId) {
   try {
     const respData = await TimesheetController.approveTimesheet({ id: timesheetId }, timesheet);
     
-    const { success, data } = respData;
+    const { success } = respData;
     
     if (success) {
-      updateTableItems(table, data);
+      loadDataAndUpdateTable(table, timesheet);
     }
   } catch (error) {
     console.error(error);
@@ -118,10 +118,10 @@ async function rejectItem(timesheetId) {
         remark_revision: message
       }, timesheet);
       
-      const { success, data } = respData;
+      const { success } = respData;
       
       if (success) {
-        updateTableItems(table, data);
+        loadDataAndUpdateTable(table, timesheet);
       }
     } catch (error) {
       console.error(error);
@@ -165,9 +165,9 @@ async function rejectItem(timesheetId) {
             <td>{{ item.remarks }}</td>
             <td><span class="badge " :class="item.status.class">{{ item.status.label }}</span></td>
             <td>{{ formatTimestamp(item.created_at) }}</td>
-            <td>{{ formatTimestamp(item.updated_at) }}</td>
+            <td>{{ item.updated_at ? formatTimestamp(item.updated_at) : '-' }}</td>
             <td class="text-center">
-              <div class="d-flex gap-2 justify-content-center align-items-center" v-if="item.status.label.includes('Pending')">
+              <div class="d-flex gap-2 justify-content-center align-items-center" v-if="item.status.label.includes(canApproveStatus)">
                 <button type="button" class="btn btn-sm btn-info" @click="approveItem(item.id)">
                   Approve
                 </button>

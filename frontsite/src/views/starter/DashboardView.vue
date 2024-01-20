@@ -476,7 +476,7 @@ async function storeTimesheet() {
                 </div> -->
               </div>
               <div class="d-flex justify-content-between align-items-center">
-                <p class="mb-0 text-gray" style="line-height: 1;">{{ sheets.remarks }}</p>
+                <p class="mb-0 text-gray" style="line-height: 1.3;">{{ sheets.remarks }}</p>
                 <button :disabled="sheets.status.label.includes('Approved')" @click="editTimesheet(sheets)" style="font-size: 12px" type="button" class="btn btn-sm btn-alt-primary" data-bs-toggle="modal" data-bs-target="#modal-block-timesheet">
                   Edit
                 </button>

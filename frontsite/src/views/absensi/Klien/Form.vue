@@ -193,7 +193,7 @@ async function onSubmit() {
           <label class="form-label" for="identify_id">
             Identity ID (KTP/SIM) <span class="text-danger">*</span>
           </label>
-          <input required type="text" class="form-control" id="identify_id" name="identify_id" v-model.number="form.identify_id"/>
+          <input required type="text" class="form-control" maxlength="16" id="identify_id" name="identify_id" v-model.number="form.identify_id"/>
         </div>
 
         <div class="mb-4">
