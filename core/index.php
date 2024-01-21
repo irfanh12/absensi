@@ -1,0 +1,1 @@
+/home/irfanh/projects/absensi/core/public/index.php
