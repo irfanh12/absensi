@@ -62,28 +62,24 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::controller(JamKerjaController::class)->group(function () {
-        Route::prefix('shift')->group(function () {
-            Route::get('/presensi/work-hour/{dateDay}', 'getPresensi')->middleware(['auth:sanctum']);
+        Route::prefix('presensi')->group(function () {
+            Route::get('lists', 'lists')->middleware(['auth:sanctum']);
+            Route::get('work-hour/{dateDay}', 'getPresensi')->middleware(['auth:sanctum']);
 
-            Route::get('/presensi/employee/{dateDay}', 'getPresensiEmployee')->middleware(['auth:sanctum']);
-            Route::post('/presensi/employee/{dateDay}', 'postPresensiEmployee')->middleware(['auth:sanctum']);
+            Route::get('employee/{dateDay}', 'getPresensiEmployee')->middleware(['auth:sanctum']);
+            Route::post('employee/{dateDay}', 'postPresensiEmployee')->middleware(['auth:sanctum']);
+            Route::get('report', 'report')->middleware(['auth:sanctum']);
         });
     });
 
     Route::controller(TimesheetController::class)->group(function () {
         Route::prefix('timesheet')->group(function () {
             Route::get('lists', 'lists')->middleware(['auth:sanctum']);
-            Route::get('/employee', 'getTimesheetEmployee')->middleware(['auth:sanctum']);
+            Route::get('employee', 'getTimesheetEmployee')->middleware(['auth:sanctum']);
 
-            Route::post('/store', 'store')->middleware(['auth:sanctum']);
-            Route::post('/approve', 'approve')->middleware(['auth:sanctum']);
-            Route::post('/reject', 'reject')->middleware(['auth:sanctum']);
-        });
-    });
-
-    Route::controller(ReportController::class)->group(function () {
-        Route::prefix('report')->group(function () {
-
+            Route::post('store', 'store')->middleware(['auth:sanctum']);
+            Route::post('approve', 'approve')->middleware(['auth:sanctum']);
+            Route::post('reject', 'reject')->middleware(['auth:sanctum']);
         });
     });
 

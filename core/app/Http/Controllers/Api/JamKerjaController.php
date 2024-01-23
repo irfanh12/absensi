@@ -13,6 +13,42 @@ use Illuminate\Support\Facades\Auth;
 
 class JamKerjaController extends Controller
 {
+    public function lists(Request $request) {
+        $responseOutput = $this->responseOutput;
+        $input = $request->all();
+
+        $dateDay = $this->dateDay($input['date']);
+        $jamkerja = JamKerja::where('hari', 'like', "%$dateDay%")->first();
+
+        $query = Presensi::where(fn($query) => $query->where([
+            ['jamkerja_id', $jamkerja->id],
+            ['created_at', '>=', strtotime($input['date'])],
+        ]));
+
+        $lists = $query->paginate($input['per_page'] ?? 10);
+
+        // $query = Presensi::select([
+        //     'jamkerja_id',
+        //     'karyawan_id',
+        //     DB::raw('GROUP_CONCAT( TIME ) as time')
+        // ])->where(fn($query) => $query->where([
+        //     ['jamkerja_id', $jamkerja->id],
+        //     ['created_at', '>=', strtotime($input['date'])],
+        // ]))
+        // ->groupBy('jamkerja_id', 'karyawan_id');
+
+        // $lists = $query->paginate($input['per_page'] ?? 10)->toArray();
+        // foreach($lists['data'] as &$datas) {
+        //     $datas['time'] = explode(',', $datas['time']);
+        // }
+
+        $responseOutput['success'] = true;
+        $responseOutput['message'] = trans('response.success.get_presensi_list');
+        $responseOutput['data'] = $lists;
+
+        return response()->json($responseOutput);
+    }
+
     /**
      * Generates a JSON response containing the working hours for a given date.
      *
@@ -122,6 +158,36 @@ class JamKerjaController extends Controller
             return response()->json($responseOutput);
         } catch(\Exception $e) {
             DB::rollback();
+            abort(500, $e->getMessage());
+        }
+    }
+
+    public function reportList(Request $request) {
+        $responseOutput = $this->responseOutput;
+        try {
+
+
+            $responseOutput['success'] = true;
+            $responseOutput['message'] = 'Success!';
+            $responseOutput['data'] = [];
+
+            return response()->json($responseOutput);
+        } catch(\Exception $e) {
+            abort(500, $e->getMessage());
+        }
+    }
+
+    public function report(Request $request) {
+        $responseOutput = $this->responseOutput;
+        try {
+
+            $presensi = Presensi::get();
+            $responseOutput['success'] = true;
+            $responseOutput['message'] = 'Success!';
+            $responseOutput['data'] = [];
+
+            return response()->json($responseOutput);
+        } catch(\Exception $e) {
             abort(500, $e->getMessage());
         }
     }

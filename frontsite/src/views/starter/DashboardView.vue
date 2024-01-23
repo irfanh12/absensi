@@ -221,7 +221,7 @@ async function getPresensiEmployee() {
 
   try {
     const dateNowTrim = moment().format("YYYYMMDD")
-    const response = await axios.get(`api/v1/shift/presensi/employee/${dateNowTrim}`)
+    const response = await axios.get(`api/v1/presensi/employee/${dateNowTrim}`)
     const respData = response.data
 
     if(respData.success) {
@@ -238,7 +238,7 @@ async function getPresensiEmployee() {
 async function storePresensiEmployee() {
   try {    
     const dateNowTrim = moment().format("YYYYMMDD")
-    const response = await axios.post(`api/v1/shift/presensi/employee/${dateNowTrim}`, data)
+    const response = await axios.post(`api/v1/presensi/employee/${dateNowTrim}`, data)
     const respData = response.data
 
     toastNotif.date = respData.time_at

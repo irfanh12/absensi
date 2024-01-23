@@ -49,7 +49,7 @@ class AuthController extends Controller
             $responseOutput['success'] = true;
             $responseOutput['message'] = trans('response.success.auth_success');
 
-            $user->tokens()->delete();
+            // $user->tokens()->delete();
 
             $user_type = $user->karyawan->user_type;
             $position = $user_type->type;
