@@ -39,9 +39,15 @@ export const useAuth = defineStore({
         klien: ['Administrator', 'Human Resource'],
         timesheet_data: ['Administrator', 'Human Resource', 'Klien'],
         timesheet: ['Karyawan Outsource', 'Administrator'],
-        menus: ['Administrator', 'Klien', 'Human Resource'],
+        menus: ['Administrator', 'Human Resource', 'Karyawan', 'Karyawan Outsource'],
         presensi_data: ['Administrator', 'Human Resource'],
         presensi: ['Administrator', 'Human Resource', 'Karyawan', 'Karyawan Outsource'],
+        hasHumanResource: () => {
+          return ['Human Resource'].includes(this.position)
+        },
+        hasKaryawan: () => {
+          return ['Karyawan', 'Karyawan Outsource'].includes(this.position)
+        }
       }      
     },
   }

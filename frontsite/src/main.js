@@ -15,6 +15,9 @@ import BasePageHeading from "@/components/BasePageHeading.vue";
 // Vue Paginate
 import Paginate from "vuejs-paginate-next";
 
+// Vue Datepicker
+import VueDatePicker from '@vuepic/vue-datepicker';
+
 // Template directives
 import clickRipple from "@/directives/clickRipple";
 
@@ -41,6 +44,7 @@ const app = createApp(App);
 app.component("BaseBlock", BaseBlock);
 app.component("BaseBackground", BaseBackground);
 app.component("BasePageHeading", BasePageHeading);
+app.component("Datepicker", VueDatePicker);
 app.component("paginate", Paginate);
 
 // Register global directives

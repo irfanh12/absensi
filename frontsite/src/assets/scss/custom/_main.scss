@@ -34,3 +34,13 @@
     --bs-card-color: #DDE2E9;
   }
 }
+
+.vs__dropdown-option{
+  &:is(.vs__dropdown-option--highlight:not(:hover)) {
+    color: white;
+  }
+  
+  &:not(:hover) {
+    color: black;
+  }
+}

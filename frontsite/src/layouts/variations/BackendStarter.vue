@@ -72,14 +72,14 @@ store.mainContent({ mode: "narrow" });
               name: 'Timesheet',
               to: 'timesheet-index',
               icon: 'fa fa-sheet-plastic',
-              permission: permissions.timesheet_data.includes(auth.position),
+              permission: true,
               parent: 'timesheet',
             },
             {
               name: 'Presensi',
               to: 'presensi-index',
               icon: 'si si-camera',
-              permission: permissions.presensi_data.includes(auth.position),
+              permission: true,
               parent: 'presensi',
             },
             {
