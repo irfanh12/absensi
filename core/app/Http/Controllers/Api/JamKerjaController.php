@@ -13,34 +13,38 @@ use Illuminate\Support\Facades\Auth;
 
 class JamKerjaController extends Controller
 {
-    public function lists(Request $request) {
+    public function lists(Request $request, $dateDay) {
         $responseOutput = $this->responseOutput;
         $input = $request->all();
 
-        $dateDay = $this->dateDay($input['date']);
-        $jamkerja = JamKerja::where('hari', 'like', "%$dateDay%")->first();
+        $created_from = strtotime($dateDay);
+        $created_to = strtotime(date('Y-m-t', strtotime($dateDay)));
 
-        $query = Presensi::where(fn($query) => $query->where([
-            ['jamkerja_id', $jamkerja->id],
-            ['created_at', '>=', strtotime($input['date'])],
-        ]));
+        $query = Presensi::select([
+            'jamkerja_id',
+            'karyawan_id',
+            DB::raw('GROUP_CONCAT( status ) as status'),
+            DB::raw('GROUP_CONCAT( TIME ) as time'),
+            DB::raw('GROUP_CONCAT( map_direction ) as directions'),
+            DB::raw('GROUP_CONCAT( photo ) as photos'),
+            DB::raw('min( created_at ) as created_at'),
+        ])->where(fn($query) => $query->where([
+            ['karyawan_id', $input['id']],
+            ['created_at', '>=', $created_from],
+            ['created_at', '<=', $created_to],
+        ]))
+        ->groupBy('jamkerja_id', 'karyawan_id');
 
-        $lists = $query->paginate($input['per_page'] ?? 10);
+        $lists = $query->get();
+        foreach($lists as &$list) {
+            $list->status = explode(',', $list->status);
+            $list->photos = explode(',', $list->photos);
+            $list->directions = json_decode('[' . $list->directions . ']', true);
+            $list->time = explode(',', $list->time);
 
-        // $query = Presensi::select([
-        //     'jamkerja_id',
-        //     'karyawan_id',
-        //     DB::raw('GROUP_CONCAT( TIME ) as time')
-        // ])->where(fn($query) => $query->where([
-        //     ['jamkerja_id', $jamkerja->id],
-        //     ['created_at', '>=', strtotime($input['date'])],
-        // ]))
-        // ->groupBy('jamkerja_id', 'karyawan_id');
-
-        // $lists = $query->paginate($input['per_page'] ?? 10)->toArray();
-        // foreach($lists['data'] as &$datas) {
-        //     $datas['time'] = explode(',', $datas['time']);
-        // }
+            $jamkerja = JamKerja::find($list->jamkerja_id);
+            $list->status_label = Presensi::getStatusTime($list->time ?? null, $jamkerja);
+        }
 
         $responseOutput['success'] = true;
         $responseOutput['message'] = trans('response.success.get_presensi_list');

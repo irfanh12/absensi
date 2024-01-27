@@ -40,6 +40,18 @@ class Karyawan extends Model
     /**
      * Get the user's last name.
      */
+    protected function fullname(): Attribute
+    {
+        $firstName = $this->first_name;
+        $lastName = $this->last_name;
+        return Attribute::make(
+            fn () => "$firstName $lastName",
+        );
+    }
+
+    /**
+     * Get the user's last name.
+     */
     protected function initialName(): Attribute
     {
         $firstName = $this->first_name;

@@ -39,12 +39,19 @@ class AuthController extends Controller
             $user = $request->user();
 
             //user details
-            $user_details = [];
-            $user_details['email'] = $user->email;
-            $user_details['karyawan'] = $user->karyawan;
-            $user_details['karyawan']['initial'] = $user->karyawan->initialName;
-            $user_details['id'] = $user->id;
-
+            $user_details = [
+                'id' => $user->karyawan->id,
+                'fullname' => $user->karyawan->fullname,
+                'position' => $user->karyawan->position,
+                'email' => $user->email,
+                'phone_number' => $user->karyawan->phone_number,
+                'user_type' => $user->karyawan->user_type,
+                'perusahaan' => $user->karyawan->perusahaan,
+                'karyawan' => [
+                    'first_name' => $user->karyawan->first_name,
+                    'last_name' => $user->karyawan->last_name,
+                ]
+            ];
             //output
             $responseOutput['success'] = true;
             $responseOutput['message'] = trans('response.success.auth_success');

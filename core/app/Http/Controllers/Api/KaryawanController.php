@@ -6,7 +6,6 @@ use Exception;
 
 use App\Models\User;
 use App\Models\Karyawan;
-use App\Models\Perusahaan;
 use App\Http\Controllers\Controller;
 
 use Illuminate\Http\Request;
@@ -14,7 +13,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
-class ClientController extends Controller
+class KaryawanController extends Controller
 {
     public function lists(Request $request) {
         $responseOutput = $this->responseOutput;
@@ -22,11 +21,15 @@ class ClientController extends Controller
         $input = $request->all();
 
         $lists = User::whereHas('karyawan', function ($query) use ($input) {
-            $query->where("type_id", $input["type_id"] ?? 4);
+            if(is_array($input["type_id"])) {
+                $query->whereIn("type_id", $input["type_id"]);
+            } else {
+                $query->whereIn("type_id", $input["type_id"]);
+            }
         })->paginate($input['per_page'] ?? 10);
 
         $responseOutput['success'] = true;
-        $responseOutput['message'] = trans('response.success.get_klien');
+        $responseOutput['message'] = trans('response.success.get_karyawan');
         $responseOutput['data'] = $lists;
 
         return response()->json($responseOutput);
@@ -44,7 +47,7 @@ class ClientController extends Controller
 
         $input = $request->all();
 
-        $validator = validator($input['klien'], [
+        $validator = validator($input, [
             'identify_id' => 'required|unique:karyawan',
             'email' => 'required|email|unique:users',
         ]);
@@ -52,42 +55,32 @@ class ClientController extends Controller
             abort(500, $validator->messages()->first());
         }
 
-        $klien = $input['klien'];
-        $perusahaan = $input['perusahaan'];
-
-        $password = $klien['password'] == 'generate' ? Str::random(8) : $klien['password'];
+        $password = $input['password'] == 'generate' ? Str::random(8) : $input['password'];
         $password_hash = Hash::make($password);
 
         DB::beginTransaction();
         try {
-            $perusahaan_id = (string) Str::uuid();
-
-            $perusahaan['id'] = $perusahaan_id;
-            $perusahaan['identify_id'] = $klien['identify_id'];
-            $perusahaan['created_at'] = now()->timestamp;
-            Perusahaan::insert($perusahaan);
-
             $uuid = (string) Str::uuid();
-            $klien['perusahaan_id'] = $perusahaan_id;
+
             Karyawan::insert([
                 'id'            => $uuid,
-                'perusahaan_id' => $klien['perusahaan_id'],
-                'identify_id'   => $klien['identify_id'],
-                'type_id'       => $klien['type_id'],
-                'position'      => $klien['position'],
-                'first_name'    => $klien['first_name'],
-                'last_name'     => $klien['last_name'],
-                'phone_number'  => $klien['phone_number'],
-                'birthdate'     => $klien['birthdate'],
-                'gender'        => $klien['gender'],
-                'address'       => $klien['address'],
-                'salary'        => $klien['salary'],
+                'perusahaan_id' => $input['perusahaan_id'],
+                'identify_id'   => $input['identify_id'],
+                'type_id'       => $input['type_id'],
+                'position'      => $input['position'],
+                'first_name'    => $input['first_name'],
+                'last_name'     => $input['last_name'],
+                'phone_number'  => $input['phone_number'],
+                'birthdate'     => $input['birthdate'],
+                'gender'        => $input['gender'],
+                'address'       => $input['address'],
+                'salary'        => $input['salary'],
                 'created_at'    => now()->timestamp,
             ]);
 
             User::insert([
                 'id'            => $uuid,
-                'email'         => $klien['email'],
+                'email'         => $input['email'],
                 'password'      => $password_hash,
                 'created_at'    => now()->timestamp,
             ]);
@@ -103,7 +96,7 @@ class ClientController extends Controller
             // $token = $user->createToken('PresensiToken', $this->enumType($user_type))->plainTextToken;
 
             $responseOutput['success'] = true;
-            $responseOutput['message'] = trans('response.success.post_klien');
+            $responseOutput['message'] = trans('response.success.post_karyawan');
             $responseOutput['data'] = [
                 'user' => $user,
             ];
@@ -115,26 +108,12 @@ class ClientController extends Controller
         }
     }
 
-    public function edit(Request $request, $id) {
-        $responseOutput = $this->responseOutput;
-
-        try {
-            $responseOutput['success'] = true;
-            $responseOutput['message'] = trans('response.success.load_klien');
-            $responseOutput['data'] = User::find($id);
-
-            return response()->json($responseOutput);
-        } catch(\Exception $e) {
-            abort(500, $e->getMessage());
-        }
-    }
-
-    public function update(Request $request, $id) {
+    public function update(Request $request, $uuid) {
         $responseOutput = $this->responseOutput;
 
         $input = $request->all();
 
-        $validator = validator($input['klien'], [
+        $validator = validator($input, [
             'identify_id' => 'required|unique:karyawan',
             'email' => 'required|email|unique:users',
         ]);
@@ -142,40 +121,32 @@ class ClientController extends Controller
             abort(500, $validator->messages()->first());
         }
 
-        $klien = $input['klien'];
-        $perusahaan = $input['perusahaan'];
-
-        $password = $klien['password'] == 'generate' ? Str::random(8) : $klien['password'];
+        $password = $input['password'] == 'generate' ? Str::random(8) : $input['password'];
         $password_hash = Hash::make($password);
 
         DB::beginTransaction();
         try {
-            $data = User::find($id);
-            $perusahaan_id = $data->karyawan->perusahaan_id;
-
-            $perusahaan['identify_id'] = $klien['identify_id'];
-            $perusahaan['updated_at'] = now()->timestamp;
-            Perusahaan::where('id', $perusahaan_id)->update($perusahaan);
-
-            $uuid = $data->id;
-            $klien['perusahaan_id'] = $perusahaan_id;
-            Karyawan::where('id', $uuid)->update([
-                'perusahaan_id' => $klien['perusahaan_id'],
-                'identify_id'   => $klien['identify_id'],
-                'type_id'       => $klien['type_id'],
-                'position'      => $klien['position'],
-                'first_name'    => $klien['first_name'],
-                'last_name'     => $klien['last_name'],
-                'phone_number'  => $klien['phone_number'],
-                'birthdate'     => $klien['birthdate'],
-                'gender'        => $klien['gender'],
-                'address'       => $klien['address'],
-                'salary'        => $klien['salary'],
+            Karyawan::where([
+                ['id', $uuid]
+            ])->update([
+                'perusahaan_id' => $input['perusahaan_id'],
+                'identify_id'   => $input['identify_id'],
+                'type_id'       => $input['type_id'],
+                'position'      => $input['position'],
+                'first_name'    => $input['first_name'],
+                'last_name'     => $input['last_name'],
+                'phone_number'  => $input['phone_number'],
+                'birthdate'     => $input['birthdate'],
+                'gender'        => $input['gender'],
+                'address'       => $input['address'],
+                'salary'        => $input['salary'],
                 'updated_at'    => now()->timestamp,
             ]);
 
-            User::where('id', $uuid)->update([
-                'email'         => $klien['email'],
+            User::where([
+                ['id', $uuid]
+            ])->update([
+                'email'         => $input['email'],
                 'password'      => $password_hash,
                 'updated_at'    => now()->timestamp,
             ]);
@@ -191,7 +162,7 @@ class ClientController extends Controller
             // $token = $user->createToken('PresensiToken', $this->enumType($user_type))->plainTextToken;
 
             $responseOutput['success'] = true;
-            $responseOutput['message'] = trans('response.success.put_klien');
+            $responseOutput['message'] = trans('response.success.update_karyawan');
             $responseOutput['data'] = [
                 'user' => $user,
             ];
@@ -212,17 +183,62 @@ class ClientController extends Controller
         try {
 
             Karyawan::find($uuid)->delete();
-            Perusahaan::find($input['perusahaan_id'])->delete();
 
             DB::commit();
 
             $responseOutput['success'] = true;
-            $responseOutput['message'] = trans('response.success.delete_klien');
+            $responseOutput['message'] = trans('response.success.delete_karyawan');
 
             return response()->json($responseOutput);
         } catch(\Exception $e) {
             DB::rollback();
             abort(500, $e->getMessage());
         }
+    }
+
+    public function getListClients(Request $request) {
+        $responseOutput = $this->responseOutput;
+
+        try {
+            $klien = Karyawan::where('type_id', 2)->get();
+
+            $responseOutput['success'] = true;
+            $responseOutput['message'] = trans('response.success.get_karyawan');
+            $responseOutput['data'] = $klien;
+
+            return response()->json($responseOutput);
+        } catch(\Exception $e) {
+            abort(500, $e->getMessage());
+        }
+    }
+
+    public function search(Request $request) {
+        $responseOutput = $this->responseOutput;
+        $input = $request->all();
+
+        $karyawans = User::whereHas('karyawan', function($query) use ($input) {
+            $query->where(function($query) use ($input) {
+                $query->where('first_name', 'LIKE', '%'.$input['keyword'].'%');
+                $query->orWhere('last_name', 'LIKE', '%'.$input['keyword'].'%');
+            })->whereIn('type_id', [4, 5]);
+        })->get();
+
+        $lists = [];
+        foreach($karyawans as $karyawan) {
+            $lists[] = [
+                'id' => $karyawan->karyawan->id,
+                'fullname' => $karyawan->karyawan->fullname,
+                'position' => $karyawan->karyawan->position,
+                'email' => $karyawan->email,
+                'phone_number' => $karyawan->karyawan->phone_number,
+                'user_type' => $karyawan->karyawan->user_type,
+                'perusahaan' => $karyawan->karyawan->perusahaan,
+            ];
+        }
+        $responseOutput['success'] = true;
+        $responseOutput['message'] = trans('response.success.get_karyawan');
+        $responseOutput['data'] = $lists;
+
+        return response()->json($responseOutput);
     }
 }
