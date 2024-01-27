@@ -162,6 +162,26 @@ function lookItem(item) {
 		}
   }, 1000)
 }
+
+/**
+ * Asynchronously reports presensis by fetching presensi data for the selected 
+ * karyawan and filterDate, then updates the UI accordingly. 
+ *
+ * @return {Promise} A Promise that resolves when the presensi data is 
+ * fetched and the UI is updated.
+ */
+async function reportPresensis() {
+  karyawan.loaded = false
+  presensi.value.statusLoading()
+  
+	const { success, data } = await PresensiController.reportPresensi(karyawan.selected, karyawan.filterDate)
+  if(success) {
+    window.open(data.url_download, '_blank');
+
+    karyawan.loaded = true
+    presensi.value.statusNormal()
+  }
+}
 </script>
 
 <style lang="scss">
@@ -244,8 +264,8 @@ function lookItem(item) {
 					<div>
 						<div class="input-group flex-nowrap">
 							<Datepicker v-model="filterDate" @update:model-value="filterPresensis" month-picker auto-apply />
-							<button class="btn btn-success btn-sm" style="width: 55%;">
-								<i class="fa fa-download"></i> Unduh Abensi
+							<button @click="reportPresensis" class="btn btn-success btn-sm" style="width: 55%;">
+								<i class="fa fa-download"></i> Unduh Presensi
 							</button>
 						</div>
 					</div>

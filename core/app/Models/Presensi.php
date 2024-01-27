@@ -20,14 +20,18 @@ class Presensi extends Model
         'updated_at' => 'timestamp',
     ];
 
-    public static function getStatusTime($times, $jamkerja) {
+    public static function getStatusTime($times, $jamkerja, $report = false) {
         if (!$times) {
-            return [
-                [
-                    'label' => 'Absensi Masih Kosong',
-                    'class' => 'bg-danger',
-                ]
-            ];
+            if($report) {
+                return [ 'Absensi Masih Kosong' ];
+            } else {
+                return [
+                    [
+                        'label' => 'Absensi Masih Kosong',
+                        'class' => 'bg-danger',
+                    ]
+                ];
+            }
         }
 
         $lateThreshold = 5 * 60; // 5 minutes in seconds
@@ -43,70 +47,111 @@ class Presensi extends Model
 
         if (!$inWorkTime && !$endWorkTime) {
             if ($userTimeIn === 0 && $userTimeOut === 0) {
-                $result[] = [
-                    'label' => 'Libur',
-                    'class' => 'bg-danger',
-                ];
+                if($report) {
+                    $result[] = 'Libur';
+                } else {
+                    $result[] = [
+                        'label' => 'Libur',
+                        'class' => 'bg-danger',
+                    ];
+                }
+            } else {
+                if($report) {
+                    $result[] = 'Lembur Waktu Libur';
+                } else {
+                    $result[] = [
+                        'label' => 'Lembur Waktu Libur',
+                        'class' => 'bg-danger',
+                    ];
+                }
+            }
+        }
+
+        if ($userTimeIn === 0 && $userTimeOut === 0) {
+            if($report) {
+                $result[] = 'Tidak Hadir';
             } else {
                 $result[] = [
-                    'label' => 'Lembur Waktu Libur',
+                    'label' => 'Tidak Hadir',
+                    'class' => 'bg-danger',
+                ];
+            }
+        }
+        else {
+            if($report) {
+                $result[] = 'Hadir';
+            } else {
+                $result[] = [
+                    'label' => 'Hadir',
+                    'class' => 'bg-success',
+                ];
+            }
+        }
+
+        if ($userTimeIn && $userTimeIn - $inWorkTime > $lateThreshold && $inWorkTime) {
+            if($report) {
+                $result[] = 'Terlambat';
+            } else {
+                $result[] = [
+                    'label' => 'Terlambat',
                     'class' => 'bg-danger',
                 ];
             }
         }
 
-        if ($userTimeIn === 0 && $userTimeOut === 0) {
-            $result[] = [
-                'label' => 'Tidak Hadir',
-                'class' => 'bg-danger',
-            ];
-        } else {
-            $result[] = [
-                'label' => 'Hadir',
-                'class' => 'bg-success',
-            ];
-        }
-
-        if ($userTimeIn && $userTimeIn - $inWorkTime > $lateThreshold && $inWorkTime) {
-            $result[] = [
-                'label' => 'Terlambat',
-                'class' => 'bg-danger',
-            ];
-        }
-
         if ($userTimeIn && $userTimeIn - $inWorkTime < $earlyThreshold) {
-            $result[] = [
-                'label' => 'Masuk Lebih Cepat',
-                'class' => 'bg-info',
-            ];
+            if($report) {
+                $result[] = 'Masuk Lebih Cepat';
+            } else {
+                $result[] = [
+                    'label' => 'Masuk Lebih Cepat',
+                    'class' => 'bg-info',
+                ];
+            }
         }
 
         if ($userTimeOut && $userTimeOut - $endWorkTime < $earlyThreshold) {
-            $result[] = [
-                'label' => 'Pulang Lebih Cepat',
-                'class' => 'bg-info',
-            ];
+            if($report) {
+                $result[] = 'Pulang Lebih Cepat';
+            } else {
+                $result[] = [
+                    'label' => 'Pulang Lebih Cepat',
+                    'class' => 'bg-info',
+                ];
+            }
         }
 
         if ($userTimeOut && $userTimeOut < $userTimeIn) {
-            $result[] = [
-                'label' => 'Tidak Mengisi Absen Pulang',
-                'class' => 'bg-warning',
-            ];
+            if($report) {
+                $result[] = 'Tidak Mengisi Absen Pulang';
+            } else {
+                $result[] = [
+                    'label' => 'Tidak Mengisi Absen Pulang',
+                    'class' => 'bg-warning',
+                ];
+            }
         }
 
         if ($userTimeIn && $userTimeIn < $userTimeOut) {
             $workedDuration = $userTimeOut - $userTimeIn;
             if ($workedDuration > $shiftDuration) {
-                $result[] = [
-                    'label' => 'Lembur',
-                    'class' => 'bg-warning',
-                ];
+                if($report) {
+                    $result[] = 'Lembur';
+                } else {
+                    $result[] = [
+                        'label' => 'Lembur',
+                        'class' => 'bg-warning',
+                    ];
+                }
             } else {
-                $result[] = [
-                    'label' => 'Tidak Mengisi Absen Masuk',
-                    'class' => 'bg-warning',
-                ];
+                if($report) {
+                    $result[] = 'Tidak Mengisi Absen Masuk';
+                } else {
+                    $result[] = [
+                        'label' => 'Tidak Mengisi Absen Masuk',
+                        'class' => 'bg-warning',
+                    ];
+                }
             }
         }
 

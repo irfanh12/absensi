@@ -72,7 +72,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('employee/{dateDay}', 'getPresensiEmployee')->middleware(['auth:sanctum']);
             Route::post('employee/{dateDay}', 'postPresensiEmployee')->middleware(['auth:sanctum']);
-            Route::get('report', 'report')->middleware(['auth:sanctum']);
+            Route::post('report/{dateDay}', 'report')->middleware(['auth:sanctum']);
         });
     });
 

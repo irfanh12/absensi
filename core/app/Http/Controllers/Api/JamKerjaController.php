@@ -7,6 +7,12 @@ use App\Models\JamKerja;
 use App\Models\Presensi;
 use App\Http\Controllers\Controller;
 
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate as CellCoordinate;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Color;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -181,18 +187,120 @@ class JamKerjaController extends Controller
         }
     }
 
-    public function report(Request $request) {
+    public function report(Request $request, $dateDay) {
         $responseOutput = $this->responseOutput;
-        try {
+        $input = $request->all();
 
-            $presensi = Presensi::get();
-            $responseOutput['success'] = true;
-            $responseOutput['message'] = 'Success!';
-            $responseOutput['data'] = [];
+        $created_from = strtotime($dateDay);
+        $created_to = strtotime(date('Y-m-t', strtotime($dateDay)));
 
-            return response()->json($responseOutput);
-        } catch(\Exception $e) {
-            abort(500, $e->getMessage());
+        $query = Presensi::select([
+            'jamkerja_id',
+            'karyawan_id',
+            DB::raw('GROUP_CONCAT( status ) as status'),
+            DB::raw('GROUP_CONCAT( TIME ) as time'),
+            DB::raw('GROUP_CONCAT( map_direction ) as directions'),
+            DB::raw('GROUP_CONCAT( photo ) as photos'),
+            DB::raw('min( created_at ) as created_at'),
+        ])->where(fn($query) => $query->where([
+            ['karyawan_id', $input['id']],
+            ['created_at', '>=', $created_from],
+            ['created_at', '<=', $created_to],
+        ]))
+        ->groupBy('jamkerja_id', 'karyawan_id');
+
+        $lists = $query->get();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $t_head = [
+            'Nama Karyawan',
+            'Status',
+            'Posisi',
+            'Alamat Email',
+            'No Telepon',
+        ];
+
+        $start_row = 2;
+        foreach ($t_head as $head) {
+            $sheet->setCellValue("A$start_row", $head);
+            $start_row++;
         }
+        $sheet->setCellValue("C2", $input['fullname']);
+        $sheet->setCellValue("C3", $input['user_type']['type']);
+        $sheet->setCellValue("C4", $input['position']);
+        $sheet->setCellValue("C5", $input['email']);
+        $sheet->setCellValue("C6", $input['phone_number']);
+
+
+        // Mapping Data
+        $t_head = [
+            '#',
+            'Tanggal',
+            'Status',
+            'Masuk',
+            'Pulang',
+            'Koordinat',
+        ];
+        $start_row = 8;
+        foreach ($t_head as $column => $head) {
+            $row_col = CellCoordinate::stringFromColumnIndex($column+1).$start_row;
+            $sheet->setCellValue($row_col, $head);
+            $spreadsheet
+                ->getActiveSheet()
+                ->getStyle($row_col)
+                ->getBorders()
+                ->getOutline()
+                ->setBorderStyle(Border::BORDER_THIN)
+                ->setColor(new Color('00000000'));
+        }
+
+        $no = 1;
+        $start_row++;
+        foreach($lists as &$list) {
+            $list->status = explode(',', $list->status);
+            $list->photos = explode(',', $list->photos);
+            $list->directions = json_decode('[' . $list->directions . ']', true);
+            $list->time = explode(',', $list->time);
+
+            $jamkerja = JamKerja::find($list->jamkerja_id);
+            $list->status_label = Presensi::getStatusTime($list->time ?? null, $jamkerja, true);
+
+            // Mapping
+            $sheet->setCellValue("A$start_row", $no);
+            $sheet->setCellValue("B$start_row", Carbon::createFromTimestamp($list->created_at)->format('Y-m-d'));
+            $sheet->setCellValue("C$start_row", implode(', ', $list->status_label));
+            $sheet->setCellValue("D$start_row", $list->time[0]);
+            $sheet->setCellValue("E$start_row", $list->time[1] ?? '-');
+            $sheet->setCellValue("F$start_row", json_encode($list->directions));
+
+            for($i = 1; $i <= 6; $i++) {
+                $spreadsheet
+                    ->getActiveSheet()
+                    ->getStyle(CellCoordinate::stringFromColumnIndex($i).$start_row)
+                    ->getBorders()
+                    ->getOutline()
+                    ->setBorderStyle(Border::BORDER_THIN)
+                    ->setColor(new Color('00000000'));
+            }
+            $no++;
+            $start_row++;
+        }
+
+        $nama_karyawan = $input['fullname'];
+
+        $filename = "Presensi $nama_karyawan Bulan " . date('F Y', strtotime($dateDay)) . ".xlsx";
+        $path = storage_path("/app/public/$filename");
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($path);
+
+        $responseOutput['success'] = true;
+        $responseOutput['message'] = trans('response.success.get_presensi_list');
+        $responseOutput['data'] = [
+            'url_download' => asset("/storage/$filename"),
+        ];
+
+        return response()->json($responseOutput);
     }
 }
