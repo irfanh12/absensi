@@ -13,7 +13,7 @@ class Timesheet extends Model
 
     protected $table = 'timesheet';
 
-    protected $with = ['revision', 'karyawan'];
+    // protected $with = ['revision', 'karyawan'];
 
     public $timestamps = false;
 

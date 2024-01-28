@@ -1,191 +1,444 @@
 <script setup>
-import { onMounted, reactive, ref } from "vue";
+import _ from "lodash";
+import { onMounted, reactive, ref, watch } from "vue";
 import * as TimesheetController from "@/controllers/Timesheet";
 import { formatTimestamp } from "@/stores/utils"
 
+/* PLUGINS */
+// Vue Select, for more info and examples you can check out https://github.com/sagalbot/vue-select
+import VueSelect from "vue-select";
+
+// Auth Store
 import { useAuth } from "@/stores/auth"
-
-const timesheet = ref(null)
-
 const auth = useAuth()
 const permissions = auth.permissions()
 
-let table = reactive({
+const timesheet = ref(null)
+const modalDetails = ref(null)
+const filterDate = ref(new Date())
+
+let karyawan = reactive({
+  loaded: false,
+  canApproveReject: false,
   lists: [],
-  total: 0,
-  page: 1,
-  per_page: 15,
-  last_page: 0
+  selected: null,
+  klien: null,
+  timesheets: [],
+  filterDate: moment().format("YYYYMM01")
 })
 
-let canApproveStatus = '';
+let detail = reactive({
+  direction: [],
+  photos: [],
+  times: [],
+  date: '',
+})
 
 onMounted(() => {
-  canApproveStatus = auth.position.includes('Klien') ? 'Pending' : 'Approved Client';
-  loadDataAndUpdateTable(table, timesheet);
+  if (permissions.hasKaryawan()) {
+    karyawan.selected = JSON.parse(localStorage.getItem('user'));
+    loadDataTimesheets()
+  }
 });
 
+watch(karyawan, async (newItem) => {
+  if (!newItem.selected) {
+    karyawan.timesheets = []
+    karyawan.canApproveReject = null
+    karyawan.klien = null
+    karyawan.selected = null
+    karyawan.loaded = false
+  }
+})
+
 /**
- * Update the items in the table with the provided data.
+ * Performs a search for data based on a given keyword.
  *
- * @param {Object} table - The table object.
- * @param {Object} data - The data object containing the updated items.
+ * @param {string} keyword - The keyword to search for.
+ * @param {Function} loading - The loading function to update the loading state.
  * @return {void}
  */
-function updateTableItems(table, data) {
-  table.lists = data.data;
-  table.total = data.total;
-  table.page = data.current_page;
-  table.per_page = data.per_page;
-  table.last_page = data.last_page;
+const searchData = _.debounce((keyword, loading) => {
+  if (keyword.length) {
+    karyawan.lists = []
+    karyawan.timesheets = []
+    karyawan.canApproveReject = null
+    karyawan.klien = null
+    karyawan.loaded = false
+
+    loading(true)
+    timesheet.value.statusLoading()
+
+    TimesheetController.searchData(keyword)
+      .then((response) => {
+        const { success, data } = response
+        if (success) {
+          karyawan.lists = data
+          loading(false)
+          timesheet.value.statusNormal()
+        }
+      })
+  }
+}, 500)
+
+/**
+ * Debounces the filterTimesheets function to delay its execution.
+ *
+ * @param {Date} date - The date to filter the timesheets.
+ * @return {void}
+ */
+const filterTimesheets = _.debounce((date) => {
+  karyawan.filterDate = moment(date).format("YYYYMM01")
+  loadDataTimesheets()
+}, 500)
+
+/**
+ * Asynchronously loads timesheets data from TimesheetController
+ *
+ * @return {Object} Object with success and data properties
+ */
+async function loadDataTimesheets() {
+  karyawan.loaded = false
+  timesheet.value.statusLoading()
+
+  const { success, data } = await TimesheetController.listTimesheet(karyawan.selected, karyawan.filterDate)
+  if (success) {
+    karyawan.loaded = true
+    karyawan.timesheets = data.lists
+    karyawan.klien = data.klien
+    karyawan.canApproveReject = data.canApproveReject
+    timesheet.value.statusNormal()
+  }
 }
 
 /**
- * Loads data from the timesheet and updates the table.
+ * Asynchronously approves the item after confirming with the user.
  *
- * @param {string} table - The table to update.
- * @param {object} timesheet - The timesheet object.
- * @return {Promise} A promise that resolves when the data is loaded and the table is updated.
+ * @return {void} 
  */
-function loadDataAndUpdateTable(table, timesheet) {
-  return TimesheetController.loadData(table, timesheet)
-    .then(respData => {
-      const { success, data } = respData;
-      
-      if (success) {
-        updateTableItems(table, data);
-      }
-    }).catch(error => {
-      console.error(error);
-    });
-}
-
-/**
- * A function that handles pagination click events.
- *
- * @param {number} pageNumber - The page number that was clicked.
- * @return {undefined} This function does not return a value.
- */
-function paginateClick(pageNumber) {
-  console.log("Pagination Click clicked");
-
-  table.page = pageNumber;
-  loadDataAndUpdateTable(table, timesheet);
-}
-
-function downloadReport() {
-  
-}
-
-async function approveItem(timesheetId) {
+async function approveItem() {
   const shouldApprove = confirm("Are you sure you want to approve this timesheet?");
-  
+
   if (!shouldApprove) {
     return;
   }
 
   try {
-    const respData = await TimesheetController.approveTimesheet({ id: timesheetId }, timesheet);
-    
-    const { success } = respData;
-    
+    const response = await TimesheetController.approveTimesheet(karyawan.selected, karyawan.filterDate);
+
+    const { success } = response;
+
     if (success) {
-      loadDataAndUpdateTable(table, timesheet);
+      loadDataTimesheets();
     }
   } catch (error) {
     console.error(error);
   }
 }
 
-async function rejectItem(timesheetId) {
-  const shouldReject = confirm("Are you sure you want to reject this timesheet?");
-  
+/**
+ * Asynchronously rejects an item after confirming with the user and handling
+ * message input validation. If the rejection is successful, it triggers a
+ * reload of the timesheets data.
+ *
+ * @return {Promise<void>} A promise that resolves when the rejection process
+ * is completed.
+ */
+async function rejectItem() {
+  const shouldReject = confirm("Apakah Anda yakin ingin menolak timesheet ini?");
+
   if (!shouldReject) {
     return;
   }
 
-  let message = prompt("Please enter your message:");
-  
+  let message = prompt("Silakan masukkan pesan Anda:");
+
   while (message === '') {
-    alert("Message cannot be blank.");
-    message = prompt("Please enter your message:");
+    alert("Pesan tidak boleh kosong.");
+    message = prompt("Silakan masukkan pesan Anda:");
   }
-  
+
   if (message) {
     try {
-      const respData = await TimesheetController.rejectTimesheet({
-        id: timesheetId,
-        remark_revision: message
-      }, timesheet);
-      
+      const respData = await TimesheetController.rejectTimesheet(karyawan.selected, karyawan.filterDate);
+
       const { success } = respData;
-      
+
       if (success) {
-        loadDataAndUpdateTable(table, timesheet);
+        loadDataTimesheets()
       }
     } catch (error) {
       console.error(error);
     }
   }
 }
+
+/**
+ * Asynchronously reports timesheets by fetching timesheet data for the selected 
+ * karyawan and filterDate, then updates the UI accordingly. 
+ *
+ * @return {Promise} A Promise that resolves when the timesheet data is 
+ * fetched and the UI is updated.
+ */
+async function reportTimesheets() {
+  karyawan.loaded = false
+  timesheet.value.statusLoading()
+
+  const { success, data } = await TimesheetController.reportTimesheet(karyawan.selected, karyawan.filterDate)
+  if (success) {
+    window.open(data.url_download, '_blank');
+
+    karyawan.loaded = true
+    timesheet.value.statusNormal()
+  }
+}
 </script>
+
+<style lang="scss">
+@import '@vuepic/vue-datepicker/dist/main.css';
+
+// Vue Select + Custom overrides
+@import "vue-select/dist/vue-select.css";
+@import "@/assets/scss/vendor/vue-select";
+</style>
+
+<style lang="scss" scoped>
+.result {
+  position: relative;
+
+  .card {
+    border-color: transparent;
+    width: 50%;
+  }
+}
+
+.marker {
+  top: 0;
+  left: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>
 
 <template>
   <div class="content">
-    <BaseBlock ref="timesheet" title="Timesheet" class="mb-0">
-      <template #options>
-        <button type="button" @click="downloadReport" class="btn btn-sm btn-success">
-          <i class="fa fa-download"></i> Download Report
-        </button>
-      </template>
-      
-      <table class="table table-hover table-bordered" style="font-size: 14px !important;">
-        <thead>
-          <tr>
-            <th class="text-center table-active" style="width: 10px;">#</th>
-            <th class="table-active" style="width: 200px;">Nama Karyawan</th>
-            <th class="table-active">Remark</th>
-            <th class="table-active" style="width: 5%">Status</th>
-            <th class="table-active" style="width: 15%">Created At</th>
-            <th class="table-active" style="width: 15%">Updated At</th>
-            <th class="text-center table-active" style="width: 15%">
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-show="table.lists.length === 0">
-            <td class="text-center" colspan="5">
-              No records found.
-            </td>
-          </tr>
-          <tr v-for="(item, key) in table.lists" :key="item.id" class="align-middle">
-            <td>{{ key+1 }}</td>
-            <td>{{ `${item.karyawan.first_name} ${item.karyawan.last_name}` }}</td>
-            <td>{{ item.remarks }}</td>
-            <td><span class="badge " :class="item.status.class">{{ item.status.label }}</span></td>
-            <td>{{ formatTimestamp(item.created_at) }}</td>
-            <td>{{ item.updated_at ? formatTimestamp(item.updated_at) : '-' }}</td>
-            <td class="text-center">
-              <div class="d-flex gap-2 justify-content-center align-items-center" v-if="item.status.label.includes(canApproveStatus)">
-                <button type="button" class="btn btn-sm btn-info" @click="approveItem(item.id)">
-                  Approve
-                </button>
-  
-                <button type="button" class="btn btn-sm btn-danger" @click="rejectItem(item.id)">
-                  Reject
-                </button>
-              </div>
-              <div v-else>
-                -
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <paginate v-show="table.lists.length > 0" :page-count="table.last_page" :click-handler="paginateClick">
-      </paginate>
+    <BaseBlock ref="timesheet" title="Card Timesheet" class="mb-0">
+      <div class="mb-4" v-if="permissions.timesheet_data.includes(auth.position)">
+        <VueSelect
+          @change="loadDataTimesheets"
+          @search="searchData"
+          v-model="karyawan.selected"
+          :options="karyawan.lists"
+          label="fullname"
+          placeholder="Cari Karyawan.." />
+      </div>
+
+      <div class="mb-4 d-flex gap-4" v-if="karyawan.loaded">
+
+        <div class="data-karyawan w-50">
+          <h4 class="mb-2">Data Karyawan</h4>
+          <ul class="list-group">
+            <li class="border-0 px-0 p-1 list-group-item d-flex justify-content-between align-items-center bg-transparent">
+              <span class="fw-bold">Nama Karyawan</span>
+              <span>{{ karyawan.selected.fullname }}</span>
+            </li>
+            <li class="border-0 px-0 p-1 list-group-item d-flex justify-content-between align-items-center bg-transparent">
+              <span class="fw-bold">Status</span>
+              <span>{{ karyawan.selected.user_type.type }}</span>
+            </li>
+            <li class="border-0 px-0 p-1 list-group-item d-flex justify-content-between align-items-center bg-transparent">
+              <span class="fw-bold">Posisi</span>
+              <span>{{ karyawan.selected.position }}</span>
+            </li>
+            <li class="border-0 px-0 p-1 list-group-item d-flex justify-content-between align-items-center bg-transparent"
+              v-if="karyawan.selected.user_type.id === 5">
+              <span class="fw-bold">Perusahaan</span>
+              <span>{{ karyawan.selected.perusahaan.nama_perusahaan }}</span>
+            </li>
+            <li class="border-0 px-0 p-1 list-group-item d-flex justify-content-between align-items-center bg-transparent">
+              <span class="fw-bold">Alamat Email</span>
+              <span>{{ karyawan.selected.email }}</span>
+            </li>
+            <li class="border-0 px-0 p-1 list-group-item d-flex justify-content-between align-items-center bg-transparent">
+              <span class="fw-bold">No Telepon</span>
+              <span>{{ karyawan.selected.phone_number }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="data-revision w-50">
+          <h4 class="mb-2">Revisi</h4>
+          <!-- <figure v-if="timesheet.data.revision">
+            <label class="form-label" for="example-textarea-input">Revision</label>
+            <blockquote class="blockquote">
+              <p><em>{{ timesheet.data.revision.remark_revision }}</em></p>
+            </blockquote>
+            <figcaption class="blockquote-footer">
+              {{ `${timesheet.data.revision.karyawan.first_name} ${timesheet.data.revision.karyawan.last_name}` }}
+            </figcaption>
+          </figure> -->
+        </div>
+
+      </div>
+
+      <div class="mb-4" v-if="karyawan.loaded">
+        <div class="mb-2 d-flex align-items-center gap-2">
+          <div class="me-auto">
+            <h4 class="mb-0 me-auto">Tabel Timesheet</h4>
+          </div>
+          
+          <div v-show="!permissions.hasKaryawan()" v-if="karyawan.canApproveReject">
+            <div class="input-group flex-nowrap">
+              <button @click="approveItem" class="btn btn-success">
+                <i class="fa fa-file-lines"></i> Terima
+              </button>
+              <button @click="rejectItem" class="btn btn-danger">
+                <i class="fa fa-xmark"></i> Tolak
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <div class="input-group flex-nowrap">
+              <Datepicker v-model="filterDate" @update:model-value="filterTimesheets" month-picker auto-apply />
+              <button @click="reportTimesheets" class="btn btn-success btn-sm" style="width: 70%;">
+                <i class="fa fa-download"></i> Unduh Timesheet
+              </button>
+            </div>
+          </div>
+        </div>
+        <table class="table table-hover table-bordered">
+          <thead>
+            <tr>
+              <th class="table-active text-center" style="width: 5%;">#</th>
+              <th class="table-active" style="width: 20%;">Tanggal</th>
+              <th class="table-active" style="width: 15%;">Klien</th>
+              <th class="table-active text-center" style="width: 10%;">Status</th>
+              <th class="table-active">Kegiatan</th>
+              <th class="table-active text-center" style="width: 20%;" v-show="permissions.hasKaryawan()">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="karyawan.timesheets.length === 0">
+              <td colspan="5" class="text-center">No one record</td>
+            </tr>
+            <tr v-for="(timesheet, key) in karyawan.timesheets" :key="key + 1">
+              <td class="text-center">{{ key + 1 }}</td>
+              <td>{{ formatTimestamp(timesheet.created_at, 'DD MMM YYYY') }}</td>
+              <td>{{ karyawan.klien.fullname }}</td>
+              <td class="d-flex gap-1 flex-wrap text-center">
+                <span class="badge" :class="timesheet.status.class">{{ timesheet.status.label }}</span>
+              </td>
+              <td>{{ timesheet.remarks }}</td>
+              <td v-show="permissions.hasKaryawan()">
+                <div class="d-flex gap-2 justify-content-center align-items-center">
+                  <button type="button" class="btn btn-sm btn-primary" @click="lookItem(timesheet)" data-bs-toggle="modal" data-bs-target="#modal-block-details">
+                    <i class="fa fa-pencil"></i> Sunting
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </BaseBlock>
+
+    <!-- Pop Out Block Modal -->
+    <div
+      class="modal fade"
+      id="modal-block-details"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="modal-block-details"
+      aria-hidden="true"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+    >
+      <div class="modal-dialog modal-lg modal-dialog-popout modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <BaseBlock ref="modalDetails" transparent class="mb-0">
+            <template #title>
+							<h4 class="mb-0">
+								{{ karyawan.selected?.fullname }}<br>
+								<small>{{ karyawan.selected?.position }}</small>
+							</h4>
+						</template>
+						
+            <template #options>
+							<button
+                type="button"
+                class="btn-block-option"
+                data-bs-dismiss="modal"
+                aria-label="Close">
+                <i class="fa fa-fw fa-times"></i>
+              </button>
+						</template>
+
+            <template #content>
+              <div class="result block-content fs-sm">
+								<div class="d-flex gap-2 w-100">
+									<div class="card">
+										<div class="position-relative">
+											<div id="mapResultStart" style="height: 250px" class="card-img-top"></div>
+											<div class="marker position-absolute">
+												<img src="@/assets/images/location-pin.png" alt="marker" style="width: 10%; opacity: .8;" />
+											</div>
+										</div>
+										<div class="card-body">
+											<p class="card-text">
+												<div class="d-flex flex-column">
+													<div class="d-flex flex-column justify-content-center align-items-center mb-2">
+														<p class="mb-0">{{ detail.date }}, <span class="fw-bold text-success">{{ detail.times ? detail.times[0] : '-' }}</span></p>
+													</div>
+													<div class="d-flex flex-column justify-content-center align-items-center mb-2">
+														<img :src="detail.photos[0]" alt="Result Attendance Photo" class="img-thumbnail mb-2" style="width: 250px" />
+														<small>Attendance Photo</small>
+													</div>
+													
+												</div>  
+											</p>
+										</div>
+									</div>
+									<div class="card" v-show="detail.times[1]">
+										<div class="position-relative">
+											<div id="mapResultEnd" style="height: 250px" class="card-img-top"></div>
+											<div class="marker position-absolute">
+												<img src="@/assets/images/location-pin.png" alt="marker" style="width: 10%; opacity: .8;" />
+											</div>
+										</div>
+										<div class="card-body">
+											<p class="card-text">
+												<div class="d-flex flex-column">
+													<div class="d-flex flex-column justify-content-center align-items-center mb-2">
+														<p class="mb-0">{{ detail.date }}, <span class="fw-bold text-danger">{{ detail.times ? detail.times[1] : '-' }}</span></p>
+													</div>
+													<div class="d-flex flex-column justify-content-center align-items-center mb-2">
+														<img :src="detail.photos[1]" alt="Result Attendance Photo" class="img-thumbnail mb-2" style="width: 250px" />
+														<small>Attendance Photo</small>
+													</div>
+													
+												</div>  
+											</p>
+										</div>
+									</div>
+								</div>
+              </div>
+              <div class="block-content block-content-full text-end bg-body d-flex justify-content-center">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-primary w-100"
+                  data-bs-dismiss="modal">
+                  Close
+                </button>
+              </div>
+            </template>
+          </BaseBlock>
+        </div>
+      </div>
+    </div>
+    <!-- END Pop Out Block Modal -->
   </div>
 </template>
 

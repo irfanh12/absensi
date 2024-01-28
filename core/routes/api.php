@@ -78,12 +78,13 @@ Route::prefix('v1')->group(function () {
 
     Route::controller(TimesheetController::class)->group(function () {
         Route::prefix('timesheet')->group(function () {
-            Route::get('lists', 'lists')->middleware(['auth:sanctum']);
+            Route::get('lists/{dateDay}', 'lists')->middleware(['auth:sanctum']);
             Route::get('employee', 'getTimesheetEmployee')->middleware(['auth:sanctum']);
 
             Route::post('store', 'store')->middleware(['auth:sanctum']);
-            Route::post('approve', 'approve')->middleware(['auth:sanctum']);
-            Route::post('reject', 'reject')->middleware(['auth:sanctum']);
+            Route::post('approve/{dateDay}', 'approve')->middleware(['auth:sanctum']);
+            Route::post('reject/{dateDay}', 'reject')->middleware(['auth:sanctum']);
+            Route::post('report/{dateDay}', 'report')->middleware(['auth:sanctum']);
         });
     });
 

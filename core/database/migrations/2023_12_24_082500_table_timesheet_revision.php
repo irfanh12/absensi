@@ -13,17 +13,15 @@ return new class extends Migration
     {
         Schema::create('timesheet_revision', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('timesheet_id')->unsigned();
             $table->uuid('karyawan_id');
 
+            $table->char('date_month');
             $table->mediumText('remark_revision');
 
             // $table->unsignedBigInteger('status')->default(0);
 
             $table->unsignedBigInteger('created_at');
             $table->unsignedBigInteger('updated_at')->nullable();
-
-            $table->foreign('timesheet_id')->references('id')->on('timesheet');
         });
     }
 
