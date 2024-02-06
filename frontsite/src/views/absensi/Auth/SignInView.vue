@@ -6,7 +6,7 @@ import { useAuth } from "@/stores/auth";
 
 // Vuelidate, for more info and examples you can check out https://github.com/vuelidate/vuelidate
 import useVuelidate from "@vuelidate/core";
-import { required, minLength } from "@vuelidate/validators";
+import { required, email, minLength } from "@vuelidate/validators";
 
 // Main store and Router
 const store = useTemplateStore();
@@ -28,11 +28,11 @@ const rules = computed(() => {
   return {
     email: {
       required,
+      email,
       minLength: minLength(3),
     },
     password: {
       required,
-      minLength: minLength(5),
     },
   };
 });
@@ -119,7 +119,7 @@ async function onSubmit() {
                       v-if="v$.email.$errors.length"
                       class="invalid-feedback animated fadeIn"
                     >
-                      Please enter your username
+                      Please enter your email
                     </div>
                   </div>
                   <div class="mb-4">

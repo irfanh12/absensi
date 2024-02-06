@@ -88,12 +88,25 @@ function deleteItem(id, perusahaan_id) {
       console.error(error);
     });
 }
+
+async function reportKlien() {
+  klien.value.statusLoading()
+  const { success, data } = await KlienController.reportKlien(klien)
+  if (success) {
+    klien.value.statusNormal()
+    window.open(data.url_download, '_blank');
+  }
+}
 </script>
 
 <template>
   <div class="content">
     <BaseBlock ref="klien" title="Klien" class="mb-0">
       <template #options>
+        <button class="btn btn-sm btn-success" @click="reportKlien">
+          Download Report Klien
+        </button>
+
         <RouterLink :to="{ name: 'klien-form' }" class="btn btn-sm btn-primary">
           <i class="fa fa-user-plus"></i> Create Klien
         </RouterLink>

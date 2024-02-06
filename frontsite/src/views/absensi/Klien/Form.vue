@@ -94,8 +94,13 @@ async function onSubmit() {
 
 <template>
   <div class="content mb-4">
-    <BaseBlock ref="klien" title="Form Klien" class="mb-0">
-      <form @submit.prevent="onSubmit">
+    <form @submit.prevent="onSubmit">
+      <BaseBlock ref="klien" title="Form Klien" class="mb-0">
+        <template #options>
+          <button class="btn btn-sm btn-primary w-100">
+            {{ form.id ? 'Update' : 'Save' }} Klien
+          </button>
+        </template>
 
         <div class="mb-4">
           <h3>Login akun</h3>
@@ -110,9 +115,9 @@ async function onSubmit() {
 
         <div class="mb-4">
           <label class="form-label" for="password">
-            Password <span class="text-danger">*</span>
+            Password <span v-show="!form.id ?? true" class="text-danger">*</span>
           </label>
-          <input required type="password" class="form-control" id="password" name="password" v-model="form.password"/>
+          <input :required="!form.id ?? true" type="password" class="form-control" id="password" name="password" v-model="form.password"/>
         </div>
 
         <div class="mb-4">
@@ -216,14 +221,8 @@ async function onSubmit() {
           </label>
           <textarea rows="5" required class="form-control" id="address" name="address" v-model="form.address"/>
         </div>
-
-        <div class="mb-4">
-          <button class="btn btn-sm btn-primary w-100">
-            Save Klien
-          </button>
-        </div>
         
-      </form>
-    </BaseBlock>
+      </BaseBlock>
+    </form>
   </div>
 </template>

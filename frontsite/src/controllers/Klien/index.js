@@ -66,3 +66,20 @@ export async function deleteItem(id, perusahaan_id) {
 		return false;
 	}
 }
+
+export async function reportKlien(ref) {
+  ref.value.statusLoading()
+  try {
+    const response = await axios.get('api/v1/client/report');
+
+    ref.value.statusNormal()
+    return response.data;
+  } catch (error) {
+    ref.value.statusNormal()
+    const errorResp = error.response.data
+    alert(errorResp.error.message);
+    // Log or handle the error in a more informative way
+    console.error('Error validating:', errorResp.error.message);
+    return false;
+  }
+}

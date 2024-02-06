@@ -52,7 +52,7 @@ store.mainContent({ mode: "narrow" });
             {
               name: 'Menus',
               heading: true,
-              permission: permissions.menus.includes(auth.position),
+              permission: true,
             },
             {
               name: 'Klien',

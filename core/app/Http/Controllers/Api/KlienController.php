@@ -9,7 +9,14 @@ use App\Models\Karyawan;
 use App\Models\Perusahaan;
 use App\Http\Controllers\Controller;
 
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate as CellCoordinate;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Color;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -135,8 +142,14 @@ class KlienController extends Controller
         $input = $request->all();
 
         $validator = validator($input['klien'], [
-            'identify_id' => 'required|unique:karyawan',
-            'email' => 'required|email|unique:users',
+            'identify_id' => [
+                'required',
+                Rule::unique('karyawan')->ignore($id)
+            ],
+            'email' => [
+                'required',
+                Rule::unique('users')->ignore($id)
+            ],
         ]);
         if($validator->fails()) {
             abort(500, $validator->messages()->first());
@@ -174,9 +187,14 @@ class KlienController extends Controller
                 'updated_at'    => now()->timestamp,
             ]);
 
+            $updatePass = false;
+            if (!empty($klien['password']) && !Hash::check($klien['password'], $data->password)) {
+                $updatePass = true;
+            }
+
             User::where('id', $uuid)->update([
                 'email'         => $klien['email'],
-                'password'      => $password_hash,
+                'password'      => $updatePass ? $password_hash : $data->password,
                 'updated_at'    => now()->timestamp,
             ]);
 
@@ -224,5 +242,74 @@ class KlienController extends Controller
             DB::rollback();
             abort(500, $e->getMessage());
         }
+    }
+
+    public function report(Request $request) {
+        $responseOutput = $this->responseOutput;
+
+        $datas = User::whereHas('karyawan', function ($query) {
+            $query->where("type_id", 2);
+        })->get();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Mapping Data
+        $t_head = [
+            '#',
+            'Nama Klien',
+            'Perusahaan',
+            'Email',
+            'Phone Number',
+        ];
+
+        $start_row = 1;
+        foreach ($t_head as $column => $head) {
+            $row_col = CellCoordinate::stringFromColumnIndex($column+1).$start_row;
+            $sheet->setCellValue($row_col, $head);
+            $spreadsheet
+                ->getActiveSheet()
+                ->getStyle($row_col)
+                ->getBorders()
+                ->getOutline()
+                ->setBorderStyle(Border::BORDER_THIN)
+                ->setColor(new Color('00000000'));
+        }
+
+        $no = 1;
+        $start_row++;
+        foreach($datas as $data) {
+            // Mapping
+            $sheet->setCellValue("A$start_row", $no);
+            $sheet->setCellValue("B$start_row", $data->karyawan->fullname);
+            $sheet->setCellValue("C$start_row", $data->karyawan->perusahaan->nama_perusahaan);
+            $sheet->setCellValue("D$start_row", $data->email);
+            $sheet->setCellValue("E$start_row", $data->karyawan->phone_number);
+
+            for($i = 1; $i <= 5; $i++) {
+                $spreadsheet
+                    ->getActiveSheet()
+                    ->getStyle(CellCoordinate::stringFromColumnIndex($i).$start_row)
+                    ->getBorders()
+                    ->getOutline()
+                    ->setBorderStyle(Border::BORDER_THIN)
+                    ->setColor(new Color('00000000'));
+            }
+            $no++;
+            $start_row++;
+        }
+
+        $filename = "Data Klien.xlsx";
+        $path = storage_path("/app/public/$filename");
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($path);
+
+        $responseOutput['success'] = true;
+        $responseOutput['message'] = trans('response.success.get_presensi_list');
+        $responseOutput['data'] = [
+            'url_download' => asset("/storage/$filename"),
+        ];
+
+        return response()->json($responseOutput);
     }
 }
