@@ -13,6 +13,7 @@ import { useAuth } from "@/stores/auth"
 const auth = useAuth()
 const permissions = auth.permissions()
 
+let selected = ref(null);
 const presensi = ref(null)
 const modalDetails = ref(null)
 const filterDate = ref(new Date())
@@ -23,6 +24,14 @@ let karyawan = reactive({
 	selected: null,
   presensis: [],
   filterDate: moment().format("YYYYMM01")
+})
+
+let table = reactive({
+  lists: [],
+  total: 0,
+  page: 1,
+  per_page: 2,
+  last_page: 0,
 })
 
 let detail = reactive({
@@ -36,6 +45,8 @@ onMounted(() => {
   if(permissions.hasKaryawan()) {
 		karyawan.selected = JSON.parse(localStorage.getItem('user'));
     loadDataPresensis()
+  } else {
+    loadDataKaryawan()
   }
   
   const myModalDetail = document.getElementById('modal-block-details')
@@ -49,7 +60,19 @@ onMounted(() => {
 
 watch(karyawan, async (newItem) => {
   if(!newItem.selected) {
-    karyawan.presensis = []
+    karyawan.selected = null
+    karyawan.loaded = false
+  }
+})
+
+watch(selected, async (newItem) => {
+  if (newItem) {
+    karyawan.selected = newItem
+    loadDataPresensis()
+  } else {
+    karyawan.timesheets = []
+    karyawan.canApproveReject = null
+    karyawan.klien = null
     karyawan.selected = null
     karyawan.loaded = false
   }
@@ -65,7 +88,6 @@ watch(karyawan, async (newItem) => {
 const searchData = _.debounce((keyword, loading) => {
 	if(keyword.length) {
     karyawan.lists = []
-    karyawan.presensis = []
     karyawan.selected = null
     karyawan.loaded = false
 
@@ -83,6 +105,16 @@ const searchData = _.debounce((keyword, loading) => {
       })
   }
 }, 500)
+
+async function loadDataKaryawan() {
+  presensi.value.statusLoading()
+  const { success, data } = await PresensiController.searchData(4);
+  karyawan.lists = []
+  if (success) {
+    karyawan.lists = data
+    presensi.value.statusNormal()
+  }
+}
 
 /**
  * Debounces the filterPresensis function to delay its execution.
@@ -104,10 +136,10 @@ async function loadDataPresensis() {
   karyawan.loaded = false
   presensi.value.statusLoading()
   
-	const { success, data } = await PresensiController.listPresensi(karyawan.selected, karyawan.filterDate)
+	const { success, data } = await PresensiController.listPresensi(karyawan.selected, karyawan.filterDate, table)
   if(success) {
     karyawan.loaded = true
-    karyawan.presensis = data
+    table = data
     presensi.value.statusNormal()
   }
 }
@@ -217,9 +249,7 @@ async function reportPresensis() {
     <BaseBlock ref="presensi" title="Card Presensi" class="mb-0">
       <div class="mb-4" v-if="permissions.presensi_data.includes(auth.position)">
         <VueSelect
-          @change="loadDataPresensis"
-          @search="searchData"
-          v-model="karyawan.selected"
+          v-model="selected"
           :options="karyawan.lists"
           label="fullname"
           placeholder="Cari Karyawan.." />
@@ -282,10 +312,10 @@ async function reportPresensis() {
             </tr>
           </thead>
           <tbody>
-            <tr v-if="karyawan.presensis.length === 0">
+            <tr v-if="table.length === 0">
               <td colspan="6" class="text-center">No one record</td>
             </tr>
-            <tr v-for="(presensi, key) in karyawan.presensis" :key="key+1">
+            <tr v-for="(presensi, key) in table" :key="key+1">
               <td class="text-center">{{ key+1 }}</td>
               <td>{{ formatTimestamp(presensi.created_at, 'DD MMM YYYY') }}</td>
               <td class="d-flex gap-1 flex-wrap">
@@ -303,6 +333,7 @@ async function reportPresensis() {
             </tr>
           </tbody>
         </table>
+        <paginate ref="paging" v-model="table.page" :page-count="table.last_page" :click-handler="paginateClick" />
       </div>
     </BaseBlock>
 

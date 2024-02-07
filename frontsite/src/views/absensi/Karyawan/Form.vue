@@ -38,22 +38,21 @@ onMounted(() => {
   }
 });
 
-function mappingForm(form, data) {
+function mappingForm(data) {
   form.id = data.id
   form.email = data.email
-  form.password = data.password
-  form.nama = data.nama
-  form.address = data.address
-  form.perusahaan_id = data.perusahaan_id
-  form.identify_id = data.identify_id
-  form.position = data.position
-  form.first_name = data.first_name
-  form.last_name = data.last_name
-  form.phone_number = data.phone_number
-  form.birthdate = data.birthdate
-  form.gender = data.gender
-  form.address = data.address
-  form.salary = data.salary
+  form.password = data.password ?? ""
+  form.address = data.karyawan.address
+  form.perusahaan_id = data.karyawan.perusahaan.id
+  form.identify_id = data.karyawan.identify_id
+  form.position = data.karyawan.position
+  form.first_name = data.karyawan.first_name
+  form.last_name = data.karyawan.last_name
+  form.phone_number = data.karyawan.phone_number
+  form.birthdate = data.karyawan.birthdate
+  form.gender = data.karyawan.gender
+  form.address = data.karyawan.address
+  form.salary = data.karyawan.salary
 }
 
 async function getListClients(clients) {
@@ -73,7 +72,7 @@ async function loadDataForm(form, karyawan) {
     const respData = await KaryawanController.loadKaryawan(form, karyawan);
     
     if (respData.success) {
-      mappingForm(form, respData.data);
+      mappingForm(respData.data);
     }
   } catch (error) {
     console.error(error);
@@ -97,8 +96,14 @@ async function onSubmit() {
 
 <template>
   <div class="content mb-4">
-    <BaseBlock ref="karyawan" title="Form Karyawan" class="mb-0">
-      <form @submit.prevent="onSubmit">
+    <form @submit.prevent="onSubmit">
+      <BaseBlock ref="karyawan" title="Form Karyawan" class="mb-0">
+        <template #options>
+          <button class="btn btn-sm btn-primary w-100">
+            {{ form.id ? 'Update' : 'Save' }} Karyawan
+          </button>
+        </template>
+      
 
         <div class="mb-4">
           <h3>Status Karyawan</h3>
@@ -154,9 +159,9 @@ async function onSubmit() {
 
         <div class="mb-4">
           <label class="form-label" for="password">
-            Password <span class="text-danger">*</span>
+            Password <span v-show="!form.id ?? true" class="text-danger">*</span>
           </label>
-          <input required type="password" class="form-control" id="password" name="password" v-model="form.password"/>
+          <input :required="!form.id ?? true" type="password" class="form-control" id="password" name="password" v-model="form.password"/>
         </div>
 
         <div class="mb-4">
@@ -242,14 +247,8 @@ async function onSubmit() {
           </label>
           <textarea rows="5" required class="form-control" id="address" name="address" v-model="form.address"/>
         </div>
-
-        <div class="mb-4">
-          <button class="btn btn-sm btn-primary w-100">
-            Save Karyawan
-          </button>
-        </div>
         
-      </form>
-    </BaseBlock>
+      </BaseBlock>
+    </form>
   </div>
 </template>

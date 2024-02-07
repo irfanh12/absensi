@@ -40,11 +40,14 @@ class TimesheetController extends Controller
             ['created_at', '<=', $created_to],
         ]));
 
-        $lists = $query->get();
+        $lists = $query->paginate($input['per_page'] ?? 10);
 
-        $klien = User::whereHas('karyawan', function($query) use ($input) {
+        $karyawan = User::whereHas('karyawan', function($query) use ($input) {
+            $query->where('id', $input['id']);
+        })->first();
+        $klien = User::whereHas('karyawan', function($query) use ($karyawan) {
             $query->where([
-                ['perusahaan_id', $input['perusahaan']['id']],
+                ['perusahaan_id', $karyawan->karyawan->perusahaan->id],
                 ['type_id', 2],
             ]);
         })->first();
@@ -57,16 +60,17 @@ class TimesheetController extends Controller
             ['status', $status]
         ]))->count();
 
+        $lists = $lists->toArray();
+
+        $lists['canApproveReject'] = $canApproveReject == 0;
+        $lists['klien'] = [
+            'fullname' => $klien->karyawan->fullname,
+            'email' => $klien->email,
+        ];
+
         $responseOutput['success'] = true;
         $responseOutput['message'] = trans('response.success.get_presensi_list');
-        $responseOutput['data'] = [
-            'canApproveReject' => $canApproveReject == 0,
-            'lists' => $lists,
-            'klien' => [
-                'fullname' => $klien->karyawan->fullname,
-                'email' => $klien->email,
-            ],
-        ];
+        $responseOutput['data'] = $lists;
 
         return response()->json($responseOutput);
     }

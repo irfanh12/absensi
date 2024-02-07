@@ -72,7 +72,7 @@ store.mainContent({ mode: "narrow" });
               name: 'Timesheet',
               to: 'timesheet-index',
               icon: 'fa fa-sheet-plastic',
-              permission: true,
+              permission: permissions.timesheet.includes(auth.position),
               parent: 'timesheet',
             },
             {

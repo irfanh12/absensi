@@ -31,6 +31,7 @@ Route::prefix('v1')->group(function () {
     Route::controller(KaryawanController::class)->group(function () {
         Route::prefix('employee')->group(function () {
             Route::get('lists', 'lists')->middleware(['auth:sanctum']);
+            Route::get('report', 'report')->middleware(['auth:sanctum']);
             Route::get('get-list-clients', 'getListClients')->middleware(['auth:sanctum']);
 
             // Select 2 Data
@@ -46,7 +47,7 @@ Route::prefix('v1')->group(function () {
     Route::controller(KlienController::class)->group(function () {
         Route::prefix('client')->group(function () {
             Route::get('lists', 'lists')->middleware(['auth:sanctum']);
-            Route::get('report', 'report');#->middleware(['auth:sanctum']);
+            Route::get('report', 'report')->middleware(['auth:sanctum']);
 
             Route::post('store', 'store')->middleware(['auth:sanctum']);
             Route::get('edit/{id}', 'edit')->middleware(['auth:sanctum']);

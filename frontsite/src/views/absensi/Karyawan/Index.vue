@@ -92,12 +92,23 @@ function deleteItem(id) {
       console.error(error);
     });
 }
+
+async function reportKaryawan() {
+  const { success, data } = await KaryawanController.reportKaryawan(karyawan)
+  if (success) {
+    window.open(data.url_download, '_blank');
+  }
+}
 </script>
 
 <template>
   <div class="content">
     <BaseBlock ref="karyawan" title="Karyawan" class="mb-0">
       <template #options>
+        <button class="btn btn-sm btn-success" @click="reportKaryawan">
+          Download Report Karyawan
+        </button>
+
         <RouterLink :to="{ name: 'karyawan-form' }" class="btn btn-sm btn-primary">
           <i class="fa fa-user-plus"></i> Create Karyawan
         </RouterLink>

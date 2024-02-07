@@ -13,6 +13,8 @@ import { useAuth } from "@/stores/auth"
 const auth = useAuth()
 const permissions = auth.permissions()
 
+let selected = ref(null);
+const paging = ref(null);
 const timesheet = ref(null)
 const modalDetails = ref(null)
 const filterDate = ref(new Date())
@@ -23,8 +25,15 @@ let karyawan = reactive({
   lists: [],
   selected: null,
   klien: null,
-  timesheets: [],
   filterDate: moment().format("YYYYMM01")
+})
+
+let table = reactive({
+  lists: [],
+  total: 0,
+  page: 1,
+  per_page: 2,
+  last_page: 0,
 })
 
 let detail = reactive({
@@ -35,6 +44,7 @@ let detail = reactive({
 })
 
 onMounted(() => {
+  loadDataKaryawan();
   if (permissions.hasKaryawan()) {
     karyawan.selected = JSON.parse(localStorage.getItem('user'));
     loadDataTimesheets()
@@ -43,7 +53,18 @@ onMounted(() => {
 
 watch(karyawan, async (newItem) => {
   if (!newItem.selected) {
-    karyawan.timesheets = []
+    karyawan.canApproveReject = null
+    karyawan.klien = null
+    karyawan.selected = null
+    karyawan.loaded = false
+  }
+})
+
+watch(selected, async (newItem) => {
+  if (newItem) {
+    karyawan.selected = newItem
+    loadDataTimesheets()
+  } else {
     karyawan.canApproveReject = null
     karyawan.klien = null
     karyawan.selected = null
@@ -61,7 +82,6 @@ watch(karyawan, async (newItem) => {
 const searchData = _.debounce((keyword, loading) => {
   if (keyword.length) {
     karyawan.lists = []
-    karyawan.timesheets = []
     karyawan.canApproveReject = null
     karyawan.klien = null
     karyawan.loaded = false
@@ -92,6 +112,15 @@ const filterTimesheets = _.debounce((date) => {
   loadDataTimesheets()
 }, 500)
 
+async function loadDataKaryawan() {
+  timesheet.value.statusLoading()
+  const { success, data } = await TimesheetController.searchData(null);
+  if (success) {
+    karyawan.lists = data
+    timesheet.value.statusNormal()
+  }
+}
+
 /**
  * Asynchronously loads timesheets data from TimesheetController
  *
@@ -101,14 +130,22 @@ async function loadDataTimesheets() {
   karyawan.loaded = false
   timesheet.value.statusLoading()
 
-  const { success, data } = await TimesheetController.listTimesheet(karyawan.selected, karyawan.filterDate)
+  const { success, data } = await TimesheetController.listTimesheet(karyawan.selected, karyawan.filterDate, table)
   if (success) {
     karyawan.loaded = true
-    karyawan.timesheets = data.lists
     karyawan.klien = data.klien
     karyawan.canApproveReject = data.canApproveReject
+    updateTableItems(table, data);
     timesheet.value.statusNormal()
   }
+}
+
+function updateTableItems(table, data) {
+  table.lists = data.data;
+  table.total = data.total;
+  table.page = data.current_page;
+  table.per_page = data.per_page;
+  table.last_page = data.last_page;
 }
 
 /**
@@ -192,6 +229,14 @@ async function reportTimesheets() {
     timesheet.value.statusNormal()
   }
 }
+
+function paginateClick(pageNumber) {
+  console.log("Pagination Click clicked", pageNumber);
+
+  paging.value.innerValue = pageNumber
+  table.page = pageNumber;
+  loadDataTimesheets();
+}
 </script>
 
 <style lang="scss">
@@ -227,9 +272,7 @@ async function reportTimesheets() {
     <BaseBlock ref="timesheet" title="Card Timesheet" class="mb-0">
       <div class="mb-4" v-if="permissions.timesheet_data.includes(auth.position)">
         <VueSelect
-          @change="loadDataTimesheets"
-          @search="searchData"
-          v-model="karyawan.selected"
+          v-model="selected"
           :options="karyawan.lists"
           label="fullname"
           placeholder="Cari Karyawan.." />
@@ -321,10 +364,10 @@ async function reportTimesheets() {
             </tr>
           </thead>
           <tbody>
-            <tr v-if="karyawan.timesheets.length === 0">
-              <td colspan="5" class="text-center">No one record</td>
+            <tr v-if="table.lists.length === 0">
+              <td :colspan="permissions.hasKaryawan() ? 6 : 4" class="text-center">No one record</td>
             </tr>
-            <tr v-for="(timesheet, key) in karyawan.timesheets" :key="key + 1">
+            <tr v-for="(timesheet, key) in table.lists" :key="key + 1">
               <td class="text-center">{{ key + 1 }}</td>
               <td>{{ formatTimestamp(timesheet.created_at, 'DD MMM YYYY') }}</td>
               <td>{{ karyawan.klien.fullname }}</td>
@@ -333,7 +376,7 @@ async function reportTimesheets() {
               </td>
               <td>{{ timesheet.remarks }}</td>
               <td v-show="permissions.hasKaryawan()">
-                <div class="d-flex gap-2 justify-content-center align-items-center">
+                <div class="d-flex gap-2 justify-content-center align-items-center" v-if="timesheet.status.label.includes('Pending')">
                   <button type="button" class="btn btn-sm btn-primary" @click="lookItem(timesheet)" data-bs-toggle="modal" data-bs-target="#modal-block-details">
                     <i class="fa fa-pencil"></i> Sunting
                   </button>
@@ -342,6 +385,7 @@ async function reportTimesheets() {
             </tr>
           </tbody>
         </table>
+        <paginate ref="paging" v-model="table.page" :page-count="table.last_page" :click-handler="paginateClick" />
       </div>
     </BaseBlock>
 

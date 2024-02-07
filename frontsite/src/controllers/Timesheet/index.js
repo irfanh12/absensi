@@ -28,10 +28,14 @@ export async function searchData (keyword) {
  * @param {string} dateDay - the date for timesheet list
  * @return {Promise} the timesheet list data
  */
-export async function listTimesheet(reactive, dateDay) {
+export async function listTimesheet(reactive, dateDay, table) {
   try {
     const response = await axios.get(`api/v1/timesheet/lists/${dateDay}`, {
-      params: { ...reactive }
+      params: {
+        id: reactive.id,
+        page: table.page,
+        per_page: table.per_page,
+      }
     });
 
     return response.data;

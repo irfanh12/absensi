@@ -139,9 +139,10 @@ class KlienController extends Controller
     public function update(Request $request, $id) {
         $responseOutput = $this->responseOutput;
 
+        $data = User::find($id);
         $input = $request->all();
 
-        $validator = validator($input['klien'], [
+        $rules = [
             'identify_id' => [
                 'required',
                 Rule::unique('karyawan')->ignore($id)
@@ -150,7 +151,16 @@ class KlienController extends Controller
                 'required',
                 Rule::unique('users')->ignore($id)
             ],
-        ]);
+        ];
+        if (isset($input['identify_id']) && $input['identify_id'] !== $data->karyawan->identify_id) {
+            $rules['identify_id'] = 'required|unique:karyawan';
+        }
+
+        if (isset($input['email']) && $input['email'] !== $data->email) {
+            $rules['email'] = 'required|unique:users';
+        }
+
+        $validator = validator($input, $rules);
         if($validator->fails()) {
             abort(500, $validator->messages()->first());
         }
@@ -163,7 +173,6 @@ class KlienController extends Controller
 
         DB::beginTransaction();
         try {
-            $data = User::find($id);
             $perusahaan_id = $data->karyawan->perusahaan_id;
 
             $perusahaan['identify_id'] = $klien['identify_id'];

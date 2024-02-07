@@ -90,10 +90,8 @@ function deleteItem(id, perusahaan_id) {
 }
 
 async function reportKlien() {
-  klien.value.statusLoading()
   const { success, data } = await KlienController.reportKlien(klien)
   if (success) {
-    klien.value.statusNormal()
     window.open(data.url_download, '_blank');
   }
 }
