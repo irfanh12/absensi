@@ -294,7 +294,7 @@ async function reportPresensis() {
 					<div>
 						<div class="input-group flex-nowrap">
 							<Datepicker v-model="filterDate" @update:model-value="filterPresensis" month-picker auto-apply />
-							<button @click="reportPresensis" class="btn btn-success btn-sm" style="width: 55%;">
+							<button @click="reportPresensis" class="btn btn-success btn-sm" style="width: 70%;">
 								<i class="fa fa-download"></i> Unduh Presensi
 							</button>
 						</div>

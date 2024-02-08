@@ -101,11 +101,11 @@ onMounted(() => {
 
 
   myModalDirection.addEventListener('shown.bs.modal', async () => {
+    formcontrolMaps.value.statusLoading()
+    
     try {
       const pos = await getCurrentPosition()
       const { latitude, longitude } = pos.coords
-
-      formcontrolMaps.value.statusLoading()
 
       data.map_direction.lat = latitude
       data.map_direction.lng = longitude
