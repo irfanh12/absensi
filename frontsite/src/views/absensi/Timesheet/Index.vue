@@ -384,8 +384,10 @@ function lookItem(item) {
               <td class="text-center">{{ key + 1 }}</td>
               <td>{{ formatTimestamp(sheet.created_at, 'DD MMM YYYY') }}</td>
               <td>{{ karyawan.klien.fullname }}</td>
-              <td class="d-flex gap-1 flex-wrap text-center">
-                <span class="badge" :class="sheet.status.class">{{ sheet.status.label }}</span>
+              <td class="text-center">
+                <div class="d-flex gap-1 flex-wrap">
+                  <span class="badge" :class="sheet.status.class">{{ sheet.status.label }}</span>
+                </div>
               </td>
               <td>{{ sheet.remarks }}</td>
               <td v-show="permissions.hasKaryawan()">
