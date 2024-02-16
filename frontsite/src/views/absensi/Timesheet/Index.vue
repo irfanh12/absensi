@@ -32,7 +32,7 @@ let table = reactive({
   lists: [],
   total: 0,
   page: 1,
-  per_page: 2,
+  per_page: 15,
   last_page: 0,
 })
 
