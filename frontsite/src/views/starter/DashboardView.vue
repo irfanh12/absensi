@@ -201,8 +201,8 @@ async function getTimesheetEmployee() {
   timesheetEmployee.value.statusLoading()
 
   try {
-    const dateNowTrim = moment().format("YYYYMMDD")
-    const response = await axios.get(`api/v1/timesheet/employee`)
+    const dateNow = moment().unix()
+    const response = await axios.get(`api/v1/timesheet/employee?date=${dateNow}`)
     const respData = response.data
 
     if(respData.success) {
@@ -263,6 +263,7 @@ async function storePresensiEmployee() {
 
     // Load Data Presensi Again
     getPresensiEmployee()
+    getTimesheetEmployee()
   } catch (error) {
     // Handle any errors that occur
     console.error(error)

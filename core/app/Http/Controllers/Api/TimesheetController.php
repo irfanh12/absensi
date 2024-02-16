@@ -194,7 +194,8 @@ class TimesheetController extends Controller
         $responseOutput = $this->responseOutput;
 
         $user = Auth::user();
-        $nowTimestamp = now()->timestamp;
+        // $nowTimestamp = now()->timestamp;
+        $nowTimestamp = $request->date;
 
         try {
             $timesheet = Timesheet::where([
@@ -208,6 +209,19 @@ class TimesheetController extends Controller
             if($timesheet->count() > 0) {
                 $firstTimestamp = $timesheet->first()->created_at;
                 $store_timesheet = Helper::unixTimeToDate($firstTimestamp) == Helper::unixTimeToDate($nowTimestamp);
+            }
+
+            $presensi = Presensi::where([
+                ['karyawan_id', $user->id],
+                ['created_at', '<=', $nowTimestamp],
+            ])->limit(4)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            if($presensi->count() > 0) {
+                $firstTimestamp = $presensi->first()->created_at;
+                // dd(Helper::unixTimeToDate($firstTimestamp), Helper::unixTimeToDate($nowTimestamp));
+                $store_timesheet = Helper::unixTimeToDate($firstTimestamp) != Helper::unixTimeToDate($nowTimestamp);
             }
 
             $responseOutput['success'] = true;

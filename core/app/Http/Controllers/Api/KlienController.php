@@ -142,6 +142,9 @@ class KlienController extends Controller
         $data = User::find($id);
         $input = $request->all();
 
+        $klien = $input['klien'];
+        $perusahaan = $input['perusahaan'];
+
         $rules = [
             'identify_id' => [
                 'required',
@@ -152,7 +155,7 @@ class KlienController extends Controller
                 Rule::unique('users')->ignore($id)
             ],
         ];
-        if (isset($input['identify_id']) && $input['identify_id'] !== $data->karyawan->identify_id) {
+        if (isset($klien['identify_id']) && $klien['identify_id'] !== $data->karyawan->identify_id) {
             $rules['identify_id'] = 'required|unique:karyawan';
         }
 
@@ -160,13 +163,10 @@ class KlienController extends Controller
             $rules['email'] = 'required|unique:users';
         }
 
-        $validator = validator($input, $rules);
+        $validator = validator($klien, $rules);
         if($validator->fails()) {
             abort(500, $validator->messages()->first());
         }
-
-        $klien = $input['klien'];
-        $perusahaan = $input['perusahaan'];
 
         $password = $klien['password'] == 'generate' ? Str::random(8) : $klien['password'];
         $password_hash = Hash::make($password);

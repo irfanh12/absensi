@@ -231,7 +231,7 @@ async function onSubmit() {
           <label class="form-label" for="phone_number">
             Phone Number <span class="text-danger">*</span>
           </label>
-          <input required type="tel" class="form-control" id="phone_number" name="phone_number" v-model="form.phone_number"/>
+          <input required type="tel" class="form-control" id="phone_number" name="phone_number" v-model.number="form.phone_number"/>
         </div>
 
         <div class="mb-4">

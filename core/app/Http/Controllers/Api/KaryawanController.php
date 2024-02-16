@@ -56,6 +56,7 @@ class KaryawanController extends Controller
 
         $validator = validator($input, [
             'identify_id' => 'required|unique:karyawan',
+            'phone_number' => 'required|integer',
             'email' => 'required|email|unique:users',
         ]);
         if($validator->fails()) {
