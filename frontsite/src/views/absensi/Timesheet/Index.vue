@@ -37,10 +37,10 @@ let table = reactive({
 })
 
 let detail = reactive({
-  direction: [],
-  photos: [],
-  times: [],
-  date: '',
+  store_timesheet: false,
+  data: {
+    remarks: "",
+  }
 })
 
 onMounted(() => {
@@ -237,6 +237,39 @@ function paginateClick(pageNumber) {
   table.page = pageNumber;
   loadDataTimesheets();
 }
+
+async function storeTimesheet() {
+  try {
+    modalDetails.value.statusLoading()
+    const response = await axios.post(`api/v1/timesheet/store`, {
+      id: detail.data.id ? detail.data.id : null,
+      remarks: detail.data.remarks,
+    })
+
+    const { success, message } = response.data
+
+    const modalElement = document.getElementById("modal-block-details")
+    const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement)
+    modalInstance.hide()
+
+    if (success) {
+      detail.data.remarks = ""
+      modalDetails.value.statusNormal()
+      loadDataTimesheets();
+    }
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+function lookItem(item) {
+  detail.data = {
+    id: item.id,
+    remarks: item.remarks,
+    revision: item.revision,
+  }
+}
+
 </script>
 
 <style lang="scss">
@@ -245,26 +278,6 @@ function paginateClick(pageNumber) {
 // Vue Select + Custom overrides
 @import "vue-select/dist/vue-select.css";
 @import "@/assets/scss/vendor/vue-select";
-</style>
-
-<style lang="scss" scoped>
-.result {
-  position: relative;
-
-  .card {
-    border-color: transparent;
-    width: 50%;
-  }
-}
-
-.marker {
-  top: 0;
-  left: 0;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
 </style>
 
 <template>
@@ -367,17 +380,17 @@ function paginateClick(pageNumber) {
             <tr v-if="table.lists.length === 0">
               <td :colspan="permissions.hasKaryawan() ? 6 : 4" class="text-center">No one record</td>
             </tr>
-            <tr v-for="(timesheet, key) in table.lists" :key="key + 1">
+            <tr v-for="(sheet, key) in table.lists" :key="key + 1">
               <td class="text-center">{{ key + 1 }}</td>
-              <td>{{ formatTimestamp(timesheet.created_at, 'DD MMM YYYY') }}</td>
+              <td>{{ formatTimestamp(sheet.created_at, 'DD MMM YYYY') }}</td>
               <td>{{ karyawan.klien.fullname }}</td>
               <td class="d-flex gap-1 flex-wrap text-center">
-                <span class="badge" :class="timesheet.status.class">{{ timesheet.status.label }}</span>
+                <span class="badge" :class="sheet.status.class">{{ sheet.status.label }}</span>
               </td>
-              <td>{{ timesheet.remarks }}</td>
+              <td>{{ sheet.remarks }}</td>
               <td v-show="permissions.hasKaryawan()">
-                <div class="d-flex gap-2 justify-content-center align-items-center" v-if="timesheet.status.label.includes('Pending')">
-                  <button type="button" class="btn btn-sm btn-primary" @click="lookItem(timesheet)" data-bs-toggle="modal" data-bs-target="#modal-block-details">
+                <div class="d-flex gap-2 justify-content-center align-items-center" v-if="sheet.status.label.includes('Pending')">
+                  <button type="button" class="btn btn-sm btn-primary" @click="lookItem(sheet)" data-bs-toggle="modal" data-bs-target="#modal-block-details">
                     <i class="fa fa-pencil"></i> Sunting
                   </button>
                 </div>
@@ -400,7 +413,7 @@ function paginateClick(pageNumber) {
       data-bs-backdrop="static"
       data-bs-keyboard="false"
     >
-      <div class="modal-dialog modal-lg modal-dialog-popout modal-dialog-centered" role="document">
+      <div class="modal-dialog modal-dialog-popout modal-dialog-centered" role="document">
         <div class="modal-content">
           <BaseBlock ref="modalDetails" transparent class="mb-0">
             <template #title>
@@ -421,62 +434,39 @@ function paginateClick(pageNumber) {
 						</template>
 
             <template #content>
-              <div class="result block-content fs-sm">
-								<div class="d-flex gap-2 w-100">
-									<div class="card">
-										<div class="position-relative">
-											<div id="mapResultStart" style="height: 250px" class="card-img-top"></div>
-											<div class="marker position-absolute">
-												<img src="@/assets/images/location-pin.png" alt="marker" style="width: 10%; opacity: .8;" />
-											</div>
-										</div>
-										<div class="card-body">
-											<p class="card-text">
-												<div class="d-flex flex-column">
-													<div class="d-flex flex-column justify-content-center align-items-center mb-2">
-														<p class="mb-0">{{ detail.date }}, <span class="fw-bold text-success">{{ detail.times ? detail.times[0] : '-' }}</span></p>
-													</div>
-													<div class="d-flex flex-column justify-content-center align-items-center mb-2">
-														<img :src="detail.photos[0]" alt="Result Attendance Photo" class="img-thumbnail mb-2" style="width: 250px" />
-														<small>Attendance Photo</small>
-													</div>
-													
-												</div>  
-											</p>
-										</div>
-									</div>
-									<div class="card" v-show="detail.times[1]">
-										<div class="position-relative">
-											<div id="mapResultEnd" style="height: 250px" class="card-img-top"></div>
-											<div class="marker position-absolute">
-												<img src="@/assets/images/location-pin.png" alt="marker" style="width: 10%; opacity: .8;" />
-											</div>
-										</div>
-										<div class="card-body">
-											<p class="card-text">
-												<div class="d-flex flex-column">
-													<div class="d-flex flex-column justify-content-center align-items-center mb-2">
-														<p class="mb-0">{{ detail.date }}, <span class="fw-bold text-danger">{{ detail.times ? detail.times[1] : '-' }}</span></p>
-													</div>
-													<div class="d-flex flex-column justify-content-center align-items-center mb-2">
-														<img :src="detail.photos[1]" alt="Result Attendance Photo" class="img-thumbnail mb-2" style="width: 250px" />
-														<small>Attendance Photo</small>
-													</div>
-													
-												</div>  
-											</p>
-										</div>
-									</div>
-								</div>
-              </div>
-              <div class="block-content block-content-full text-end bg-body d-flex justify-content-center">
-                <button
-                  type="button"
-                  class="btn btn-sm btn-primary w-100"
-                  data-bs-dismiss="modal">
-                  Close
-                </button>
-              </div>
+              <form @submit.prevent="storeTimesheet()">
+                <div class="result block-content fs-sm p-0">
+                  <div class="card">
+                    <div class="card-body">
+                      <!-- <figure v-if="detail.data.revision">
+                        <label class="form-label" for="example-textarea-input">Revision</label>
+                        <blockquote class="blockquote">
+                          <p><em>{{ detail.data.revision.remark_revision }}</em></p>
+                        </blockquote>
+                        <figcaption class="blockquote-footer">
+                          {{ `${detail.data.revision.karyawan.first_name} ${detail.data.revision.karyawan.last_name}` }}
+                        </figcaption>
+                      </figure> -->
+                      <label class="form-label" for="example-textarea-input">Remarks</label>
+                      <textarea
+                        class="form-control"
+                        id="example-textarea-input"
+                        name="example-textarea-input"
+                        rows="7"
+                        placeholder="Remarks content.."
+                        v-model="detail.data.remarks"
+                      ></textarea>
+                    </div>
+                  </div>
+                </div>
+                <div class="block-content block-content-full text-end bg-body d-flex justify-content-center">
+                  <button
+                    type="submit"
+                    class="btn btn-sm btn-primary w-100">
+                    Save Timesheet
+                  </button>
+                </div>
+              </form>
             </template>
           </BaseBlock>
         </div>
