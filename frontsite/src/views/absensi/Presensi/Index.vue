@@ -318,8 +318,10 @@ async function reportPresensis() {
             <tr v-for="(presensi, key) in table" :key="key+1">
               <td class="text-center">{{ key+1 }}</td>
               <td>{{ formatTimestamp(presensi.created_at, 'DD MMM YYYY') }}</td>
-              <td class="d-flex gap-1 flex-wrap">
-                <span class="badge" v-for="(stats, key) in presensi.status_label" :key="key" :class="stats.class">{{ stats.label }}</span>
+              <td>
+                <div class="d-flex gap-1 flex-wrap">
+                  <span class="badge" v-for="(stats, key) in presensi.status_label" :key="key" :class="stats.class">{{ stats.label }}</span>
+                </div>
               </td>
               <td>{{ presensi.time[0] ?? '-' }}</td>
               <td>{{ presensi.time[1] ?? '-' }}</td>

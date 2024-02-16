@@ -39,6 +39,7 @@ class JamKerjaController extends Controller
             ['created_at', '>=', $created_from],
             ['created_at', '<=', $created_to],
         ]))
+        ->orderBy('created_at', 'asc')
         ->groupBy('jamkerja_id', 'karyawan_id');
 
         $lists = $query->get();
