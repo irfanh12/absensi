@@ -94,7 +94,7 @@ async function onSubmit() {
       <div class="row justify-content-center push">
         <div class="col-md-8 col-lg-6 col-xl-4">
           <!-- Sign In Block -->
-          <BaseBlock ref="login" class="mb-0">
+          <BaseBlock ref="login" >
             <div class="p-sm-3 px-lg-4 px-xxl-5 py-lg-5">
               <h1 class="h2 mb-1">{{ store.app.name }}</h1>
               <p class="fw-medium text-muted">Welcome, please login.</p>

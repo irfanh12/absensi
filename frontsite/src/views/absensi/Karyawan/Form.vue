@@ -97,7 +97,7 @@ async function onSubmit() {
 <template>
   <div class="content mb-4">
     <form @submit.prevent="onSubmit">
-      <BaseBlock ref="karyawan" title="Form Karyawan" class="mb-0">
+      <BaseBlock ref="karyawan" title="Form Karyawan" >
         <template #options>
           <button class="btn btn-sm btn-primary w-100">
             {{ form.id ? 'Update' : 'Save' }} Karyawan

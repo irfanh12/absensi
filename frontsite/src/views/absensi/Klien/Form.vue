@@ -41,8 +41,6 @@ onMounted(() => {
 function mappingForm(form, data) {
   form.id = data.id
   form.email = data.email
-  form.password = data.karyawan.password
-  form.nama = data.karyawan.nama
   form.address = data.karyawan.address
   form.perusahaan_id = data.karyawan.perusahaan_id
   form.identify_id = data.karyawan.identify_id
@@ -95,7 +93,7 @@ async function onSubmit() {
 <template>
   <div class="content mb-4">
     <form @submit.prevent="onSubmit">
-      <BaseBlock ref="klien" title="Form Klien" class="mb-0">
+      <BaseBlock ref="klien" title="Form Klien">
         <template #options>
           <button class="btn btn-sm btn-primary w-100">
             {{ form.id ? 'Update' : 'Save' }} Klien

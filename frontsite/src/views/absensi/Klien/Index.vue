@@ -99,7 +99,7 @@ async function reportKlien() {
 
 <template>
   <div class="content">
-    <BaseBlock ref="klien" title="Klien" class="mb-0">
+    <BaseBlock ref="klien" title="Klien" >
       <template #options>
         <button class="btn btn-sm btn-success" @click="reportKlien">
           Download Report Klien

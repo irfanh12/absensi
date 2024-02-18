@@ -92,7 +92,7 @@ async function onSubmit() {
 
 <template>
   <div class="content mb-4">
-    <BaseBlock ref="klien" title="Form Klien" class="mb-0">
+    <BaseBlock ref="klien" title="Form Klien" >
       <form @submit.prevent="onSubmit">
 
         <div class="mb-4">
