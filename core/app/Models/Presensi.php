@@ -18,6 +18,7 @@ class Presensi extends Model
     protected $casts = [
         'created_at' => 'timestamp',
         'updated_at' => 'timestamp',
+        'map_direction' => 'array',
     ];
 
     public static function getStatusTime($times, $jamkerja, $report = false) {

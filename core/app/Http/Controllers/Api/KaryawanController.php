@@ -56,7 +56,7 @@ class KaryawanController extends Controller
 
         $validator = validator($input, [
             'identify_id' => 'required|unique:karyawan',
-            'phone_number' => 'required|integer',
+            'phone_number' => 'required|numeric',
             'email' => 'required|email|unique:users',
         ]);
         if($validator->fails()) {
@@ -137,6 +137,7 @@ class KaryawanController extends Controller
         $input = $request->all();
 
         $rules = [
+            'phone_number' => 'required|numeric',
             'identify_id' => [
                 'required',
                 Rule::unique('karyawan')->ignore($uuid)

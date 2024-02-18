@@ -146,6 +146,7 @@ class KlienController extends Controller
         $perusahaan = $input['perusahaan'];
 
         $rules = [
+            'phone_number' => 'required|numeric',
             'identify_id' => [
                 'required',
                 Rule::unique('karyawan')->ignore($id)

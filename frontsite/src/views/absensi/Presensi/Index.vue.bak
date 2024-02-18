@@ -139,7 +139,7 @@ function lookItem(item) {
 
 <template>
   <div class="content">
-    <BaseBlock ref="presensi" title="Presensi" class="mb-0">
+    <BaseBlock ref="presensi" title="Presensi" >
       <template #options>
         <button type="button" class="btn btn-sm btn-success">
           <i class="fa fa-download"></i> Download Report
@@ -200,7 +200,7 @@ function lookItem(item) {
     >
       <div class="modal-dialog modal-dialog-popout modal-dialog-centered" role="document">
         <div class="modal-content">
-          <BaseBlock ref="modalDetails" transparent class="mb-0">
+          <BaseBlock ref="modalDetails" transparent >
 
             <template #content>
               <div class="result block-content fs-sm">
@@ -216,7 +216,7 @@ function lookItem(item) {
                       <div class="d-flex flex-column">
                         <div class="d-flex flex-column justify-content-center align-items-center mb-2">
                           <h3 class="fw-bold mb-0">{{ detail.fullname }}</h3>
-                          <p class="mb-0">{{ detail.date }}, <span class="fw-bold text-primary">{{ detail.time }}</span></p>
+                          <p >{{ detail.date }}, <span class="fw-bold text-primary">{{ detail.time }}</span></p>
                         </div>
                         <div class="d-flex flex-column justify-content-center align-items-center mb-2">
                           <img :src="detail.photoUrl" alt="Result Attendance Photo" class="img-thumbnail mb-2" style="width: 250px" />

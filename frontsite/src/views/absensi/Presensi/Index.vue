@@ -14,6 +14,7 @@ const auth = useAuth()
 const permissions = auth.permissions()
 
 let selected = ref(null);
+const paging = ref(null)
 const presensi = ref(null)
 const modalDetails = ref(null)
 const filterDate = ref(new Date())
@@ -139,7 +140,12 @@ async function loadDataPresensis() {
 	const { success, data } = await PresensiController.listPresensi(karyawan.selected, karyawan.filterDate, table)
   if(success) {
     karyawan.loaded = true
-    table = data
+    table.lists = data.data
+    table.total = data.total
+    table.page = data.current_page
+    table.per_page = data.per_page
+    table.last_page = data.last_page
+    // table = data
     presensi.value.statusNormal()
   }
 }
@@ -214,6 +220,14 @@ async function reportPresensis() {
     presensi.value.statusNormal()
   }
 }
+
+function paginateClick(pageNumber) {
+  console.log("Pagination Click clicked", pageNumber);
+
+  paging.value.innerValue = pageNumber
+  table.page = pageNumber;
+  loadDataPresensis();
+}
 </script>
 
 <style lang="scss">
@@ -246,7 +260,7 @@ async function reportPresensis() {
 
 <template>
   <div class="content">
-    <BaseBlock ref="presensi" title="Card Presensi" class="mb-0">
+    <BaseBlock ref="presensi" title="Card Presensi">
       <div class="mb-4" v-if="permissions.presensi_data.includes(auth.position)">
         <VueSelect
           v-model="selected"
@@ -312,12 +326,12 @@ async function reportPresensis() {
             </tr>
           </thead>
           <tbody>
-            <tr v-if="table.length === 0">
+            <tr v-if="table.lists.length === 0">
               <td colspan="6" class="text-center">No one record</td>
             </tr>
-            <tr v-for="(presensi, key) in table" :key="key+1">
+            <tr v-for="(presensi, key) in table.lists" :key="key+1">
               <td class="text-center">{{ key+1 }}</td>
-              <td>{{ formatTimestamp(presensi.created_at, 'DD MMM YYYY') }}</td>
+              <td>{{ presensi.date }}</td>
               <td>
                 <div class="d-flex gap-1 flex-wrap">
                   <span class="badge" v-for="(stats, key) in presensi.status_label" :key="key" :class="stats.class">{{ stats.label }}</span>
@@ -352,7 +366,7 @@ async function reportPresensis() {
     >
       <div class="modal-dialog modal-lg modal-dialog-popout modal-dialog-centered" role="document">
         <div class="modal-content">
-          <BaseBlock ref="modalDetails" transparent class="mb-0">
+          <BaseBlock ref="modalDetails" transparent >
             <template #title>
 							<h4 class="mb-0">
 								{{ karyawan.selected?.fullname }}<br>
@@ -384,7 +398,7 @@ async function reportPresensis() {
 											<p class="card-text">
 												<div class="d-flex flex-column">
 													<div class="d-flex flex-column justify-content-center align-items-center mb-2">
-														<p class="mb-0">{{ detail.date }}, <span class="fw-bold text-success">{{ detail.times ? detail.times[0] : '-' }}</span></p>
+														<p >{{ detail.date }}, <span class="fw-bold text-success">{{ detail.times ? detail.times[0] : '-' }}</span></p>
 													</div>
 													<div class="d-flex flex-column justify-content-center align-items-center mb-2">
 														<img :src="detail.photos[0]" alt="Result Attendance Photo" class="img-thumbnail mb-2" style="width: 250px" />
@@ -406,7 +420,7 @@ async function reportPresensis() {
 											<p class="card-text">
 												<div class="d-flex flex-column">
 													<div class="d-flex flex-column justify-content-center align-items-center mb-2">
-														<p class="mb-0">{{ detail.date }}, <span class="fw-bold text-danger">{{ detail.times ? detail.times[1] : '-' }}</span></p>
+														<p >{{ detail.date }}, <span class="fw-bold text-danger">{{ detail.times ? detail.times[1] : '-' }}</span></p>
 													</div>
 													<div class="d-flex flex-column justify-content-center align-items-center mb-2">
 														<img :src="detail.photos[1]" alt="Result Attendance Photo" class="img-thumbnail mb-2" style="width: 250px" />

@@ -16,6 +16,7 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Pagination\Paginator;
 
 class JamKerjaController extends Controller
 {
@@ -26,36 +27,58 @@ class JamKerjaController extends Controller
         $created_from = strtotime($dateDay);
         $created_to = strtotime(date('Y-m-t', strtotime($dateDay)));
 
-        $query = Presensi::select([
-            'jamkerja_id',
-            'karyawan_id',
-            DB::raw('GROUP_CONCAT( status ) as status'),
-            DB::raw('GROUP_CONCAT( TIME ) as time'),
-            DB::raw('GROUP_CONCAT( map_direction ) as directions'),
-            DB::raw('GROUP_CONCAT( photo ) as photos'),
-            DB::raw('min( created_at ) as created_at'),
-        ])->where(fn($query) => $query->where([
+        $queries = Presensi::where(fn($query) => $query->where([
             ['karyawan_id', $input['id']],
             ['created_at', '>=', $created_from],
             ['created_at', '<=', $created_to],
         ]))
-        ->orderBy('created_at', 'asc')
-        ->groupBy('jamkerja_id', 'karyawan_id');
+            ->orderBy('created_at', 'asc')
+            ->get();
 
-        $lists = $query->get();
-        foreach($lists as &$list) {
-            $list->status = explode(',', $list->status);
-            $list->photos = explode(',', $list->photos);
-            $list->directions = json_decode('[' . $list->directions . ']', true);
-            $list->time = explode(',', $list->time);
-
-            $jamkerja = JamKerja::find($list->jamkerja_id);
-            $list->status_label = Presensi::getStatusTime($list->time ?? null, $jamkerja);
+        $lists = [];
+        foreach($queries as $query) {
+            $date = date('Y-m-d', $query->created_at);
+            $lists[$date][] = [
+                'jamkerja' => $query->jamkerja,
+                'karyawan' => $query->karyawan,
+                'time' => $query->time,
+                'status' => $query->status,
+                'photo' => $query->photo,
+                'map_direction' => $query->map_direction,
+                'created_at' => $query->created_at,
+            ];
         }
+
+        // dd($lists);
+        foreach($lists as $date => &$list) {
+            $field['date'] = date('d M Y', strtotime($date));
+            $field['karyawan'] = $list[0]['karyawan'];
+            $field['time'] = [ $list[0]['time'], $list[1]['time'] ?? null ];
+            $field['directions'] = [ $list[0]['map_direction'], $list[1]['map_direction'] ?? null ];
+            $field['photos'] = [ $list[0]['photo'], $list[1]['photo'] ?? null ];
+            $field['status'] = [ $list[0]['status'], $list[1]['status'] ?? null ];
+            $field['status_label'] = Presensi::getStatusTime([
+                $list[0]['time'], $list[1]['time'] ?? null
+            ], $list[0]['jamkerja']);
+
+            $list = $field;
+        }
+
+        // Paginate the collection
+        $perPage = $input['per_page']; // Number of items per page
+        $page = Paginator::resolveCurrentPage() ?: 1; // Get the current page or default to 1
+        $collection = collect($lists)
+            ->values();
+        $paginatedData = $collection->forPage($page ?? 1, $perPage ?? 10)->values();
+
+        // Create paginator instance
+        $paginator = new Paginator($paginatedData, $perPage, $page, [ 'path' => Paginator::resolveCurrentPath() ]);
+        $paginator = $paginator->toArray();
+        $paginator['last_page'] = max((int) ceil($collection->count() / $perPage), 1);
 
         $responseOutput['success'] = true;
         $responseOutput['message'] = trans('response.success.get_presensi_list');
-        $responseOutput['data'] = $lists;
+        $responseOutput['data'] = $paginator;
 
         return response()->json($responseOutput);
     }

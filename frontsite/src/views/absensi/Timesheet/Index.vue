@@ -282,7 +282,7 @@ function lookItem(item) {
 
 <template>
   <div class="content">
-    <BaseBlock ref="timesheet" title="Card Timesheet" >
+    <BaseBlock ref="timesheet" title="Card Timesheet">
       <div class="mb-4" v-if="permissions.timesheet_data.includes(auth.position)">
         <VueSelect
           v-model="selected"
@@ -417,9 +417,9 @@ function lookItem(item) {
     >
       <div class="modal-dialog modal-dialog-popout modal-dialog-centered" role="document">
         <div class="modal-content">
-          <BaseBlock ref="modalDetails" transparent >
+          <BaseBlock ref="modalDetails" transparent class="mb-0">
             <template #title>
-							<h4 >
+							<h4 class="mb-0">
 								{{ karyawan.selected?.fullname }}<br>
 								<small>{{ karyawan.selected?.position }}</small>
 							</h4>
