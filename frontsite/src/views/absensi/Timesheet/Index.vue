@@ -358,7 +358,7 @@ function lookItem(item) {
               <button @click="approveItem" v-if="permissions.hasApproveFrom(_.filter(table.lists, obj => obj.status.label === 'Pending').length, auth.position) > 0" class="btn btn-success">
                 <i class="fa fa-file-lines"></i> Terima
               </button>
-              <button @click="rejectItem" class="btn btn-danger">
+              <button @click="rejectItem" v-if="permissions.hasApproveFrom(_.filter(table.lists, obj => obj.status.label === 'Pending').length, auth.position) > 0" v-show="permissions.hasKlien()" class="btn btn-danger">
                 <i class="fa fa-xmark"></i> Tolak
               </button>
             </div>
@@ -399,7 +399,7 @@ function lookItem(item) {
               </td>
               <td>{{ sheet.remarks }}</td>
               <td v-show="permissions.hasKaryawan()">
-                <div class="d-flex gap-2 justify-content-center align-items-center" v-if="sheet.status.label.includes('Pending')">
+                <div class="d-flex gap-2 justify-content-center align-items-center" v-if="sheet.status.label.includes('Pending') || sheet.status.label.includes('Rejected Client') ">
                   <button type="button" class="btn btn-sm btn-primary" @click="lookItem(sheet)" data-bs-toggle="modal" data-bs-target="#modal-block-details">
                     <i class="fa fa-pencil"></i> Sunting
                   </button>

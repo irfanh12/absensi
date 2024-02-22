@@ -48,6 +48,9 @@ export const useAuth = defineStore({
         hasKaryawan: () => {
           return ['Karyawan', 'Karyawan Outsource'].includes(this.position)
         },
+        hasKlien: () => {
+          return ['Klien'].includes(this.position)
+        },
         hasApproveFrom: (length, position) => {
           if(position === 'Human Resource') {
             return true;

@@ -126,7 +126,9 @@ class TimesheetController extends Controller
 
         $user = Auth::user();
         $input = $request->all();
-        $dateDayTimestamp = strtotime($dateDay);
+
+        $created_from = strtotime($dateDay);
+        $created_to = strtotime(date('Y-m-t', strtotime($dateDay)));
 
         DB::beginTransaction();
         try {
@@ -137,7 +139,8 @@ class TimesheetController extends Controller
 
             $timesheet = Timesheet::where([
                 ['karyawan_id', $input['id']],
-                ['created_at', '>=', $dateDayTimestamp],
+                ['created_at', '>=', $created_from],
+                ['created_at', '<=', $created_to],
             ])->update([
                 'status' => $status,
                 'updated_at' => now()->timestamp
@@ -161,13 +164,15 @@ class TimesheetController extends Controller
 
         $user = Auth::user();
         $input = $request->all();
-        $dateDayTimestamp = strtotime($dateDay);
+
+        $created_from = strtotime($dateDay);
+        $created_to = strtotime(date('Y-m-t', strtotime($dateDay)));
 
         DB::beginTransaction();
         try {
             $timesheet = Timesheet::where([
                 ['karyawan_id', $input['id']],
-                ['created_at', '>=', $dateDayTimestamp],
+                ['created_at', '>=', $created_from],
             ])->get();
 
             $karyawan = $user->karyawan;
@@ -178,7 +183,8 @@ class TimesheetController extends Controller
 
                 Timesheet::where([
                     ['karyawan_id', $input['id']],
-                    ['created_at', '>=', $dateDayTimestamp],
+                    ['created_at', '>=', $created_from],
+                    ['created_at', '<=', $created_to],
                 ])->update([
                     'status' => $status,
                     'updated_at' => now()->timestamp,
