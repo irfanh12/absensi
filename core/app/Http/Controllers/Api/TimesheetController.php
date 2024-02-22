@@ -136,9 +136,11 @@ class TimesheetController extends Controller
             $user_type = $karyawan->user_type;
 
             $status = in_array($user_type->type, ['Administrator', 'Human Resource']) ? 2 : 1;
+            $status_in = in_array($user_type->type, ['Administrator', 'Human Resource']) ? 1 : 0;
 
             $timesheet = Timesheet::where([
                 ['karyawan_id', $input['id']],
+                ['status', $status_in],
                 ['created_at', '>=', $created_from],
                 ['created_at', '<=', $created_to],
             ])->update([
@@ -183,6 +185,7 @@ class TimesheetController extends Controller
 
                 Timesheet::where([
                     ['karyawan_id', $input['id']],
+                    ['status', 0],
                     ['created_at', '>=', $created_from],
                     ['created_at', '<=', $created_to],
                 ])->update([
