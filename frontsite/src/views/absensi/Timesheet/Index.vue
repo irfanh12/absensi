@@ -8,6 +8,9 @@ import { formatTimestamp } from "@/stores/utils"
 // Vue Select, for more info and examples you can check out https://github.com/sagalbot/vue-select
 import VueSelect from "vue-select";
 
+// SimpleBar, for more info and examples you can check out https://github.com/Grsmto/simplebar/tree/master/packages/simplebar-vue
+import SimpleBar from "simplebar";
+
 // Auth Store
 import { useAuth } from "@/stores/auth"
 const auth = useAuth()
@@ -133,11 +136,16 @@ async function loadDataTimesheets() {
   const { success, data } = await TimesheetController.listTimesheet(karyawan.selected, karyawan.filterDate, table)
   if (success) {
     karyawan.loaded = true
+    karyawan.revision = data.revision
     karyawan.klien = data.klien
     karyawan.canApproveReject = data.canApproveReject
     updateTableItems(table, data);
     timesheet.value.statusNormal()
   }
+
+  setTimeout(() => {
+    new SimpleBar(document.getElementById("revisionScroll"));
+  }, 1500)
 }
 
 function updateTableItems(table, data) {
@@ -197,7 +205,8 @@ async function rejectItem() {
 
   if (message) {
     try {
-      const respData = await TimesheetController.rejectTimesheet(karyawan.selected, karyawan.filterDate);
+      karyawan.selected.remark_revision = message
+      const respData = await TimesheetController.rejectTimesheet(karyawan.selected, moment(karyawan.filterDate).format("YYYYMM01"));
 
       const { success } = respData;
 
@@ -326,15 +335,14 @@ function lookItem(item) {
 
         <div class="data-revision w-50">
           <h4 class="mb-2">Revisi</h4>
-          <!-- <figure v-if="timesheet.data.revision">
-            <label class="form-label" for="example-textarea-input">Revision</label>
-            <blockquote class="blockquote">
-              <p><em>{{ timesheet.data.revision.remark_revision }}</em></p>
-            </blockquote>
-            <figcaption class="blockquote-footer">
-              {{ `${timesheet.data.revision.karyawan.first_name} ${timesheet.data.revision.karyawan.last_name}` }}
-            </figcaption>
-          </figure> -->
+          <div style="height: 100%; max-height: 200px;" id="revisionScroll">
+            <div class="d-flex flex flex-column">
+              <div class="d-flex flex justify-content-between" v-for="revision in karyawan.revision" :key="revision.id">
+                <strong>{{ revision.remark_revision }}</strong>
+                <strong>{{ revision.date_month }}</strong>
+              </div>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -347,7 +355,7 @@ function lookItem(item) {
           
           <div v-show="!permissions.hasKaryawan()" v-if="karyawan.canApproveReject">
             <div class="input-group flex-nowrap">
-              <button @click="approveItem" class="btn btn-success">
+              <button @click="approveItem" v-if="permissions.hasApproveFrom(_.filter(table.lists, obj => obj.status.label === 'Pending').length, auth.position) > 0" class="btn btn-success">
                 <i class="fa fa-file-lines"></i> Terima
               </button>
               <button @click="rejectItem" class="btn btn-danger">

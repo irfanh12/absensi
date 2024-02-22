@@ -201,8 +201,8 @@ async function getTimesheetEmployee() {
   timesheetEmployee.value.statusLoading()
 
   try {
-    const dateNow = moment().unix()
-    const response = await axios.get(`api/v1/timesheet/employee?date=${dateNow}`)
+    const dateNowTrim = moment().format("YYYYMMDD")
+    const response = await axios.get(`api/v1/timesheet/employee?date=${dateNowTrim}`)
     const respData = response.data
 
     if(respData.success) {
@@ -292,8 +292,8 @@ async function storeTimesheet() {
       const toastInstance = bootstrap.Toast.getOrCreateInstance(toastElement)
       toastInstance.show()
 
-      getTimesheetEmployee()
     }
+    getTimesheetEmployee()
   } catch (error) {
     console.error(error)
   }

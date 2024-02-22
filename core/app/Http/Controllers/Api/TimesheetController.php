@@ -55,18 +55,23 @@ class TimesheetController extends Controller
         $karyawan = $user->karyawan;
         $user_type = $karyawan->user_type;
 
-        $status = in_array($user_type->type, ['Administrator', 'Human Resource']) ? 2 : 1;
-        $canApproveReject = Timesheet::where(fn($query) => $query->where([
+        $status = in_array($user_type->type, ['Administrator', 'Human Resource']) ? 1 : 0;
+        $canApproveReject = Timesheet::where([
+            ['created_at', '>=', $created_from],
             ['status', $status]
-        ]))->count();
+        ])->count();
 
         $lists = $lists->toArray();
 
-        $lists['canApproveReject'] = $canApproveReject == 0;
+        $lists['canApproveReject'] = $canApproveReject > 0;
         $lists['klien'] = [
             'fullname' => $klien->karyawan->fullname,
             'email' => $klien->email,
         ];
+        $lists['revision'] = TimesheetRevision::where([
+            ['karyawan_id', $input['id']],
+            ['date_month', '=', $dateDay],
+        ])->get();
 
         $responseOutput['success'] = true;
         $responseOutput['message'] = trans('response.success.get_presensi_list');
@@ -121,6 +126,7 @@ class TimesheetController extends Controller
 
         $user = Auth::user();
         $input = $request->all();
+        $dateDayTimestamp = strtotime($dateDay);
 
         DB::beginTransaction();
         try {
@@ -129,7 +135,10 @@ class TimesheetController extends Controller
 
             $status = in_array($user_type->type, ['Administrator', 'Human Resource']) ? 2 : 1;
 
-            $timesheet = Timesheet::where('karyawan_id', $input['id'])->update([
+            $timesheet = Timesheet::where([
+                ['karyawan_id', $input['id']],
+                ['created_at', '>=', $dateDayTimestamp],
+            ])->update([
                 'status' => $status,
                 'updated_at' => now()->timestamp
             ]);
@@ -152,10 +161,14 @@ class TimesheetController extends Controller
 
         $user = Auth::user();
         $input = $request->all();
+        $dateDayTimestamp = strtotime($dateDay);
 
         DB::beginTransaction();
         try {
-            $timesheet = Timesheet::find($input['id']);
+            $timesheet = Timesheet::where([
+                ['karyawan_id', $input['id']],
+                ['created_at', '>=', $dateDayTimestamp],
+            ])->get();
 
             $karyawan = $user->karyawan;
             $user_type = $karyawan->user_type;
@@ -163,14 +176,18 @@ class TimesheetController extends Controller
             if($timesheet) {
                 $status = in_array($user_type->type, ['Administrator', 'Human Resource']) ? 4 : 3;
 
-                $timesheet->status = $status;
-                $timesheet->updated_at = now()->timestamp;
-                $timesheet->save();
+                Timesheet::where([
+                    ['karyawan_id', $input['id']],
+                    ['created_at', '>=', $dateDayTimestamp],
+                ])->update([
+                    'status' => $status,
+                    'updated_at' => now()->timestamp,
+                ]);
 
                 TimesheetRevision::insert([
-                    'timesheet_id' => $input['id'],
+                    'date_month' => $dateDay,
                     'remark_revision' => $input['remark_revision'],
-                    'karyawan_id' => $timesheet->karyawan_id,
+                    'karyawan_id' => $input['id'],
                     'created_at' => now()->timestamp,
                 ]);
 
@@ -194,22 +211,20 @@ class TimesheetController extends Controller
         $responseOutput = $this->responseOutput;
 
         $user = Auth::user();
-        // $nowTimestamp = now()->timestamp;
-        $nowTimestamp = $request->date;
+        $nowTimestamp = strtotime($request->date);
 
         try {
             $timesheet = Timesheet::where([
                 ['karyawan_id', $user->id],
-                ['created_at', '<=', $nowTimestamp],
+                ['created_at', '<=', now()->timestamp],
             ])->limit(4)
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            $store_timesheet = false;
-            if($timesheet->count() > 0) {
-                $firstTimestamp = $timesheet->first()->created_at;
-                $store_timesheet = Helper::unixTimeToDate($firstTimestamp) == Helper::unixTimeToDate($nowTimestamp);
-            }
+            // if($timesheet->count() > 0) {
+            //     $firstTimestamp = $timesheet->first()->created_at;
+            //     $store_timesheet = Helper::unixTimeToDate($firstTimestamp) == Helper::unixTimeToDate($nowTimestamp);
+            // }
 
             $presensi = Presensi::where([
                 ['karyawan_id', $user->id],
@@ -223,6 +238,11 @@ class TimesheetController extends Controller
                 // dd(Helper::unixTimeToDate($firstTimestamp), Helper::unixTimeToDate($nowTimestamp));
                 $store_timesheet = Helper::unixTimeToDate($firstTimestamp) != Helper::unixTimeToDate($nowTimestamp);
             }
+
+            $store_timesheet = Timesheet::where([
+                ['karyawan_id', $user->id],
+                ['created_at', '>=', $nowTimestamp],
+            ])->exists();
 
             $responseOutput['success'] = true;
             $responseOutput['message'] = trans('response.success.get_timesheet');

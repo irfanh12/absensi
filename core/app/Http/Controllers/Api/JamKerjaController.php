@@ -138,7 +138,6 @@ class JamKerjaController extends Controller
             if($presensi->count()) {
                 $presensi_start = $presensi->where('status', 'Start Time')->first();
                 $presensi_end = $presensi->where('status', 'End Time')->last();
-
                 $data['start_time'] = $presensi_start->time;
                 $data['end_time'] = $presensi_end ? $presensi_end->time : '--:--';
             }
@@ -158,6 +157,7 @@ class JamKerjaController extends Controller
 
         $user = Auth::user();
         $input = $request->all();
+        $dateDateTimestamp = strtotime($dateDay);
 
         DB::beginTransaction();
         try {
@@ -166,6 +166,7 @@ class JamKerjaController extends Controller
 
             $presensi = Presensi::where([
                 ['jamkerja_id', $jamkerja->id],
+                ['created_at', '>=', $dateDateTimestamp],
                 ['karyawan_id', $user->id],
             ])->exists();
             $start_time = !$presensi ? true : false;
@@ -175,7 +176,7 @@ class JamKerjaController extends Controller
             $presensi->jamkerja_id      = $jamkerja->id;
             $presensi->karyawan_id      = $user->id;
             $presensi->photo            = $this->storeImage($input['photo']['base64image']);
-            $presensi->map_direction    = json_encode($input['map_direction']);
+            $presensi->map_direction    = $input['map_direction'];
             $presensi->time             = $input['time'];
             $presensi->created_at       = now()->timestamp;
             $presensi->save();

@@ -47,7 +47,14 @@ export const useAuth = defineStore({
         },
         hasKaryawan: () => {
           return ['Karyawan', 'Karyawan Outsource'].includes(this.position)
-        }
+        },
+        hasApproveFrom: (length, position) => {
+          if(position === 'Human Resource') {
+            return true;
+          } else {
+            return length > 0;
+          }
+        },
       }      
     },
   }
